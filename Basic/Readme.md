@@ -50,3 +50,17 @@
       - 제약조건 이름은 'model.(제약조건 이름)'으로 설정
       - 넣고 싶은 제약조건은 'pyo.Constraint'뒤에 (rule=제약조건으로 사용할 함수 이름) 으로 넣기
   - 목적함수
+    - ```
+      def obj_rule(model):                                        
+        return  model.x + pyo.sin(model.y) # x + sin(y)
+      model.obj = pyo.Objective(rule=obj_rule)
+      ```
+    - 제약조건과 마찬가지로 함수로 define
+    - 목적함수의 이름과 넣는 방법은 동일
+
+  - 결과 출력 부분
+    - ```
+      print('x= ' + str(model.x.value))
+      print('y= ' + str(model.y.value))
+      print('Objective function= ' + str(model.obj.expr()))
+      ```
