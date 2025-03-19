@@ -1,0 +1,52 @@
+# Pyomo Tutorial v1 (2025.03.19) 
+
+[Test_Pyomo.py](./Test_Pyomo.py)
+
+## Pyomo 설명 
+
+- Python 기반의 최적화 프로그램
+  - 무료이며, 유료 및 무료 solver와 함께 사용 가능함
+  - Linear Programming과 함께 Nonlinear Programming을 함께 해결할 수 있음
+    - 단, Nonlinear programming은 solver의 특성을 타는 것으로 보임
+  - 사이트
+    - https://www.pyomo.org/
+    - Ipopt solver 사용을 위하여 Conda를 이용하여 설치
+
+## 예제 파일
+- 비선형 최적화 문제 예제
+  - $$
+    \begin{aligned}
+    Minimize \quad & x+sin(y) \\
+    s.t. \quad & x \geq 10 \\
+    & \pi \leq y \leq \frac{5}{2}\pi
+    \end{aligned}
+    $$
+  - 예제에서의 답은 $x$가 10이고, $sin(y)$가 -1이 되는 지점일 것이다.
+    - Optimal Point: $x=10, y=\frac{3}{2}\pi$
+- Code step by step
+  - Module 불러오기
+    - ```
+      import pyomo.environ as pyo 
+      ```
+  - Model 만들기
+    - ```
+      model = pyo.ConcreteModel()
+      ```
+  - 제약조건(Constraints)
+    - ```
+      def xregion(model):
+        return model.x>=10.01
+      model.Boundx = pyo.Constraint(rule=xregion)
+
+      def yregion1(model):
+        return model.y<=1.57*5
+      model.Boundy1 = pyo.Constraint(rule=yregion1)
+
+      def yregion2(model):
+        return model.y>=1.57*2
+      model.Boundy2 = pyo.Constraint(rule=yregion2)
+      ```
+      - 제약조건은 함수로 define하여 입력해야 함
+      - 제약조건 이름은 'model.(제약조건 이름)'으로 설정
+      - 넣고 싶은 제약조건은 'pyo.Constraint'뒤에 (rule=제약조건으로 사용할 함수 이름) 으로 넣기
+  - 목적함수
