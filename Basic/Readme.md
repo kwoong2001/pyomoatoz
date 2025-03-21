@@ -15,11 +15,11 @@
 ## 예제 파일
 - 비선형 최적화 문제 예제
   - $$
-    \begin{aligned}
-    Minimize \quad & x+sin(y) \\
-    s.t. \quad & x \geq 10 \\
-    & \pi \leq y \leq \frac{5}{2}\pi
-    \end{aligned}
+      \begin{aligned}
+        Minimize \quad & x+sin(y) \\
+        s.t. \quad & x \geq 10 \\
+        & \pi \leq y \leq \frac{5}{2}\pi
+      \end{aligned}
     $$
   - 예제에서의 답은 $x$가 10이고, $sin(y)$가 -1이 되는 지점일 것이다.
     - Optimal Point: $x=10, y=\frac{3}{2}\pi$
