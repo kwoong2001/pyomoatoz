@@ -18,8 +18,8 @@
 $$
 \begin{align*}
 Minimize \quad &x+sin(y) \\
-s.t. \quad  &x \geq 10 \\
-\qquad \pi \leq &y \leq \frac{5}{2}\pi
+s.t. &\quad x \geq 10 \\
+&\pi \leq y \leq \frac{5}{2}\pi
 \end{align*}
 $$
 
