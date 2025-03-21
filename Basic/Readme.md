@@ -18,8 +18,8 @@
 $$
 \begin{align*}
 Minimize &\quad x+sin(y) \\
-s.t. \quad & x \geq 10 \\
-&\pi \leq y \leq \frac{5}{2}\pi
+s.t. \quad  10 \leq &x \leq 20 \\
+\pi \leq &y \leq \frac{5}{2}\pi
 \end{align*}
 $$
 
@@ -34,18 +34,28 @@ $$
     - ```
       model = pyo.ConcreteModel()
       ```
+  - 변수 만들기 (Variables)
+    - ```
+      model.x = pyo.Var(within=pyo.NonNegativeReals,initialize=10.0)
+      model.y = pyo.Var(within=pyo.NonNegativeReals,initialize=math.pi/2)
+      ```
+      - x와 y에 초기값 지정
   - 제약조건(Constraints)
     - ```
-      def xregion(model):
-        return model.x>=10
-      model.Boundx = pyo.Constraint(rule=xregion)
+      def xregion1(model):
+          return model.x>=10 # return model.x==10
+      model.Boundx1 = pyo.Constraint(rule=xregion1)
+
+      def xregion2(model):
+          return model.x<=20 # return model.x==20
+      model.Boundx2 = pyo.Constraint(rule=xregion2)
 
       def yregion1(model):
-        return model.y<=1.57*5
+          return model.y<=math.pi/2*5
       model.Boundy1 = pyo.Constraint(rule=yregion1)
 
       def yregion2(model):
-        return model.y>=1.57*2
+          return model.y>=math.pi/2*2
       model.Boundy2 = pyo.Constraint(rule=yregion2)
       ```
       - 제약조건은 함수로 define하여 입력해야 함
@@ -54,8 +64,8 @@ $$
   - 목적함수
     - ```
       def obj_rule(model):                                        
-        return  model.x + pyo.sin(model.y) # x + sin(y)
-      model.obj = pyo.Objective(rule=obj_rule)
+          return  model.x + pyo.sin(model.y) # x + sin(y)
+      model.obj = pyo.Objective(rule=obj_rule,sense=pyo.minimize) # if you want to maximize objective, use 'sense=pyo.maximize'
       ```
     - 제약조건과 마찬가지로 함수로 define
     - 목적함수의 이름과 넣는 방법은 동일

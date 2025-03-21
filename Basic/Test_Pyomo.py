@@ -2,6 +2,7 @@
 
 """ Call modules """
 import pyomo.environ as pyo 
+import math
 
 """ INPUTS """
 solver = 'ipopt' # Select solver
@@ -12,21 +13,25 @@ model = pyo.ConcreteModel()
 
 """ Create Variables """
 # Variables
-model.x = pyo.Var(within=pyo.NonNegativeReals,initialize=10.01) # 10<x<inf
-model.y = pyo.Var(within=pyo.NonNegativeReals,initialize=1.57*2) # 3/2pi
+model.x = pyo.Var(within=pyo.NonNegativeReals,initialize=10.0)
+model.y = pyo.Var(within=pyo.NonNegativeReals,initialize=math.pi/2) # 
 
 """ Create Constraints """
 #constraints
-def xregion(model):
+def xregion1(model):
     return model.x>=10 # return model.x==10
-model.Boundx = pyo.Constraint(rule=xregion)
+model.Boundx1 = pyo.Constraint(rule=xregion1)
+
+def xregion2(model):
+    return model.x<=20 # return model.x==20
+model.Boundx2 = pyo.Constraint(rule=xregion2)
 
 def yregion1(model):
-    return model.y<=1.57*5
+    return model.y<=math.pi/2*5
 model.Boundy1 = pyo.Constraint(rule=yregion1)
 
 def yregion2(model):
-    return model.y>=1.57*2
+    return model.y>=math.pi/2*2
 model.Boundy2 = pyo.Constraint(rule=yregion2)
 
 """ Create Objective function """
