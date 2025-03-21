@@ -5,6 +5,6 @@
 - Pyomo를 활용하기 위한 코드 모음
 
 ## Contents
-### 1. Basic ([Description of Basic](./Basic/Readme.md))
+### 1. Basic ([Description of Basic (Nonlinear problem)](./Basic/Nonliear_problem/Readme_test_nonlinear.md))
 
 - 기본적인 Pyomo 실행 및 예제 코드

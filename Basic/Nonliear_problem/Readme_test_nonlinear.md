@@ -1,6 +1,6 @@
 # Pyomo Tutorial v1 (2025.03.19) 
 
-[Test_Pyomo.py](./Test_Pyomo.py)
+[test_nonlinear.py](./test_nonlinear.py)
 
 ## Pyomo 설명 
 
