@@ -14,13 +14,16 @@
 
 ## 예제 파일
 - 비선형 최적화 문제 예제
+
 $$
-  \begin{aligned}
-    Minimize \quad & x+sin(y) \\
-    s.t. \quad & x \geq 10 \\
-    & \pi \leq y \leq \frac{5}{2}\pi
-  \end{aligned}
+\begin{align*}
+Minimize \quad &x+sin(y) \\
+s.t. \quad  &x \geq 10 \\
+\pi \leq &y \leq \frac{5}{2}\pi
+\end{align*}
 $$
+
+
   - 예제에서의 답은 $x$가 10이고, $sin(y)$가 -1이 되는 지점일 것이다.
     - Optimal Point: $x=10, y=\frac{3}{2}\pi$
 - Code step by step
@@ -35,7 +38,7 @@ $$
   - 제약조건(Constraints)
     - ```
       def xregion(model):
-        return model.x>=10.01
+        return model.x>=10
       model.Boundx = pyo.Constraint(rule=xregion)
 
       def yregion1(model):
