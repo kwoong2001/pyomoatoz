@@ -17,12 +17,11 @@
 
 $$
 \begin{align*}
-Minimize \quad &x+sin(y) \\
-s.t. &\quad x \geq 10 \\
+Minimize &\quad x+sin(y) \\
+s.t. \quad & x \geq 10 \\
 &\pi \leq y \leq \frac{5}{2}\pi
 \end{align*}
 $$
-
 
   - 예제에서의 답은 $x$가 10이고, $sin(y)$가 -1이 되는 지점일 것이다.
     - Optimal Point: $x=10, y=\frac{3}{2}\pi$
