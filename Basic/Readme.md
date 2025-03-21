@@ -17,9 +17,9 @@
 
 $$
 \begin{align*}
-Minimize &\quad x+sin(y) \\
-s.t. \quad  &10 \leq x \leq 20 \\
-\pi \leq &y \leq \frac{5}{2}\pi
+Minimize &\quad &x+sin(y) \\
+s.t. &\quad  &10 \leq x \leq 20 \\
+&\quad &\pi \leq y \leq \frac{5}{2}\pi
 \end{align*}
 $$
 
