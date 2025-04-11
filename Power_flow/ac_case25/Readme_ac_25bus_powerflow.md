@@ -31,15 +31,12 @@
 $$
 \begin{align*}
 Minimize &\quad &\sum_{\forall i}{ (\alpha_{i} + \beta_{i})(P^{known}_{i} - P^{cal}_{i}) + \beta_{i}(Q^{known}_{i} - Q^{cal}_{i}) +\alpha_{i}(V^{known}_{i} - V^{cal}_{i}) } \\
-
 \quad s.t. &\quad  &P^{cal}_{i} = \sum_{\forall j}{V^{Cal}_{i}V^{Cal}_{j}(G_{ij}cos(\theta^{cal}_{i} - \theta^{cal}_{j}) + B_{ij}sin(\theta^{cal}_{i} - \theta^{cal}_{j}))}, \quad \forall i  \\
-
 &\quad  &Q^{cal}_{i} = \sum_{\forall j}{V^{Cal}_{i}V^{Cal}_{j}(G_{ij}sin(\theta^{cal}_{i} - \theta^{cal}_{j}) - B_{ij}cos(\theta^{cal}_{i} - \theta^{cal}_{j}))}, \quad \forall i \\
-
 &\quad  &P^{cal}_{i} \geq 0, \quad \forall i\\
 &\quad  &Q^{cal}_{i} \geq 0, \quad \forall i\\
 &\quad  &V^{cal}_{i} \geq 0, \quad \forall i\\
-&\quad  &\theta^{cal}_{i} \geq 0, \quad \forall i\\
+&\quad  &\theta^{cal}_{i} \geq 0, \quad \forall i
 \end{align*}
 $$
 
@@ -50,7 +47,7 @@ $$
 
 $$
 \begin{align*}
-Minimize &\quad \sum_{\forall i}{ (\alpha_{i} + \beta_{i})(P^{known}_{i} - P^{cal}_{i}) + \beta_{i}(Q^{known}_{i} - Q^{cal}_{i}) +\alpha_{i}(V^{known}_{i} - V^{cal}_{i}) }\\
+Minimize &\quad \sum_{\forall i}{ (\alpha_{i} + \beta_{i})(P^{known}_{i} - P^{cal}_{i}) + \beta_{i}(Q^{known}_{i} - Q^{cal}_{i}) +\alpha_{i}(V^{known}_{i} - V^{cal}_{i}) }
 \end{align*}
 $$
 
@@ -61,13 +58,11 @@ $$
 $$
 \begin{align*}
 \quad s.t. &\quad  P^{cal}_{i} = \sum_{\forall j}{V^{Cal}_{i}V^{Cal}_{j}(G_{ij}cos(\theta^{cal}_{i} - \theta^{cal}_{j}) + B_{ij}sin(\theta^{cal}_{i} - \theta^{cal}_{j}))}, \quad \forall i  \\
-
 &\quad  Q^{cal}_{i} = \sum_{\forall j}{V^{Cal}_{i}V^{Cal}_{j}(G_{ij}sin(\theta^{cal}_{i} - \theta^{cal}_{j}) - B_{ij}cos(\theta^{cal}_{i} - \theta^{cal}_{j}))}, \quad \forall i \\
-
 &\quad  P^{cal}_{i} \geq 0, \quad \forall i\\
 &\quad  Q^{cal}_{i} \geq 0, \quad \forall i\\
 &\quad  V^{cal}_{i} \geq 0, \quad \forall i\\
-&\quad  \theta^{cal}_{i} \geq 0, \quad \forall i\\
+&\quad  \theta^{cal}_{i} \geq 0, \quad \forall i
 \end{align*}
 $$
 
