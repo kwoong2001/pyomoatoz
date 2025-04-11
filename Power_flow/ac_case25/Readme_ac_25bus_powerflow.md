@@ -15,7 +15,7 @@
 - $P^{known}_{i}$: Known value of active power in Bus $i$
 - $Q^{known}_{i}$: Known value of reactive power in Bus $i$
 - $V^{known}_{i}$: Known value of voltage magnitude in Bus $i$
-- $V^{slack}_{i}$: Voltage magnitude in slack bus
+- $V^{slack}$: Voltage magnitude in slack bus
 - $G_{ij}$: Conductance of the line between Bus $i$ and Bus $j$
 - $B_{ij}$: Susceptance of the line between Bus $i$ and Bus $j$
 
