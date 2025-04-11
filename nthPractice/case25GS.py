@@ -15,6 +15,16 @@ GEN = read(file_path, 'generator')
 TR = read(file_path, 'transformer')
 LINE = read(file_path, 'branch')
 
+for i in range(0,25):
+    if BUS[i,1] == 'Swing':
+        BUS[i,1] = 1
+    elif BUS[i,1] == 'PQ':
+        BUS[i,1] = 2
+    elif BUS[i,1] == 'PV':
+        BUS[i,1] = 3
+
+BUS = BUS.astype(np.float64)
+print(BUS.dtype)
 
 B = BUS.shape[0]
 L0 = LINE.shape[0]
@@ -92,20 +102,19 @@ Vmag = Vmag.flatten()
 Vang = Vang.flatten()
 
 n = len(P)
-print(n)
 
 init_P = {i: float(P[i]) for i in range(n)}
 init_Q = {i: float(Q[i]) for i in range(n)}
 init_Vmag = {i: float(Vmag[i]) for i in range(n)}
 init_Vang = {i: float(Vang[i]) for i in range(n)}
 
-solver = 'ipopt'
+# solver = 'ipopt'
 
-model = pyo.ConcreteModel
+# model = pyo.ConcreteModel
 
-model.Bus = pyo.RangeSet(0, n-1)
+# model.Bus = pyo.RangeSet(0, n-1)
 
-model.P = pyo.Param(model.Bus, initialize=init_P)
-model.Q = pyo.Param(model.Bus, initialize=init_Q)
-model.Vmag = pyo.Param(model.Bus, initialize=init_Vmag)
-model.Vang = pyo.Param(model.Bus, initialize=init_Vang)
+# model.P = pyo.Param(model.Bus, initialize=init_P)
+# model.Q = pyo.Param(model.Bus, initialize=init_Q)
+# model.Vmag = pyo.Param(model.Bus, initialize=init_Vmag)
+# model.Vang = pyo.Param(model.Bus, initialize=init_Vang)
