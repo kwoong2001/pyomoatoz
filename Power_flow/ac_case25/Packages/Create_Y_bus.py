@@ -1,11 +1,18 @@
-def Create_Y_bus(np,pd,pre_caldata_path,Bus_set,Branch_data,Transformer_data):
+def create_Y_bus(np,pd,pre_caldata_path,Bus_set,Branch_data,Transformer_data):
     
     Buses = Bus_set
     G_matrix = np.zeros([len(Buses),len(Buses)])
     B_matrix = np.zeros([len(Buses),len(Buses)])
     
+    
     """
     Y행렬 만드는 부분 - 태호, Y행렬 만드는 부분 참고하여 입력하기 ('25.04.11)
+    Branch_data 불러오면 됨
+    Branch_data['From'] -> Bus i
+    Branch_data['To'] -> Bus j
+    Branch_data['R (pu)'] -> R
+    Branch_data['X (pu)'] -> X
+    Branch_data['B (pu)'] -> B
     """
 
     open(pre_caldata_path + 'Y_bus_Pyomo.csv', 'w').close()

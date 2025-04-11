@@ -17,7 +17,8 @@ import pyomo.environ as pyo
 import math
 
 """"Packages"""
-from Packages.Create_Y_bus import Create_Y_bus
+from Packages.Create_Y_bus import create_Y_bus
+from Packages.Create_set_n_params import create_set_and_params
 
 """"Path"""
 Main_path = os.path.dirname(os.path.realpath(__file__))
@@ -39,13 +40,12 @@ Param_data = pd.read_excel(power_system_data,'param')
 B. 데이터 전처리 (최적화 수행에 맞는 데이터 만들기)
 """
 
-""" 1. 집합 만들기(Bus set) """
-#추후 엑셀로 저장할 예정('25.04.11)
-Bus_set = list(Bus_data['Bus'])
+""" 1. 집합 만들기(Set) """
+create_set_and_params(np,pd,pre_caldata_path,Bus_data['Bus'])
 
 """ 2. Y 행렬 생성 """
 #[Bus_i, Bus_j, Bus_G, Bus_B]를 열로 갖는 Y_bus.csv 파일 '/PreCalData/'폴더에 생성하는 것 목표
-Create_Y_bus(np,pd,pre_caldata_path,Bus_set,Branch_data,Transformer_data)
+create_Y_bus(np,pd,pre_caldata_path,Bus_data['Bus'],Branch_data,Transformer_data)
 
 """ 3. 모선별 아는 값 입력(전압의 크기, 위상, 유효 및 무효전력) """
 
