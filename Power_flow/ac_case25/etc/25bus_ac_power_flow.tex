@@ -1,0 +1,84 @@
+\documentclass{article}
+\usepackage{amsmath}
+
+\title{AC power flow using Pyomo: 25-Bus Case}
+\author{Woong Ko}
+\date{\today}
+
+\begin{document}
+\maketitle
+
+\begin{abstract}
+
+\end{abstract}
+
+\newpage
+\section{Nomenclature}
+\subsection{Indices}
+\noindent
+$i, j$: Bus
+
+\subsection{Parameters}
+\noindent
+$\omega_{i}$: Slack Bus indicator (If Bus $i$ is slack bus, 1 otherwise 0)\\
+$\alpha_{i}$: PV Bus indicator (If Bus $i$ is PV bus, 1 otherwise 0)\\
+$\beta_{i}$: PQ Bus indicator (If Bus $i$ is PQ bus, 1 otherwise 0)\\
+\noindent
+$P^{known}_{i}$: Known value of active power in Bus $i$\\
+$Q^{known}_{i}$: Known value of reactive power in Bus $i$\\
+$P^{gen}_{i}$: Set point of generation of active power in Bus $i$\\
+$Q^{gen}_{i}$: Set point of generation of reactive power in Bus $i$\\
+$P^{load}_{i}$: Set point of load of active power in Bus $i$\\
+$Q^{load}_{i}$: Set point of load of reactive power in Bus $i$\\
+$P^{gen,max}_{i}$.$P^{gen,min}_{i}$: Maximum/Minimum value of active power of generator in Bus $i$\\
+$P^{load,max}_{i}$, $P^{load,min}_{i}$: Maximum/Minimum value of active power of load in Bus $i$\\
+$Q^{gen,max}_{i}$, $Q^{gen,min}_{i}$: Maximum/Minimum value of reactive power of generator in Bus $i$\\
+$Q^{load,max}_{i}$, $Q^{load,min}_{i}$: Maximum/Minimum value of reactive power of load in Bus $i$\\
+\noindent
+$V^{slack}$: Voltage magnitude in slack bus\\
+$V^{known}_{i}$: Known value of voltage magnitude in Bus $i$\\
+$V^{setpoint}_{i}$: Set point of voltage magnitude in Bus $i$\\
+$V^{max}_{i}$,$V^{min}_{i}$: Maximum/Minimum value of voltage magnitude in Bus $i$\\
+$G_{ij}$: Conductance of the line between Bus $i$ and Bus $j$\\
+$B_{ij}$: Susceptance of the line between Bus $i$ and Bus $j$\\
+
+\subsection{Variables}
+$P^{cal}_{i}$: Active power in Bus $i$\\
+$Q^{cal}_{i}$: Reactive power in Bus $i$\\
+$V^{cal}_{i}$: Voltage magnitude in Bus $i$\\
+$\theta^{cal}_{i}$: Voltage angle in Bus $i$\\
+
+\newpage
+\section{Formula}
+
+\subsection{Obejctive function}
+\begin{align}
+    \begin{split}
+        Minimize \quad \sum_{\forall i}\bigg[  & (\alpha_{i} + \beta_{i})(P^{known}_{i} - P^{cal}_{i})\\
+                                    & + \beta_{i}(Q^{known}_{i} - Q^{cal}_{i}) \\
+                                    & +\alpha_{i}(V^{known}_{i} - V^{cal}_{i}) \\
+                                    & +\omega_{i}(V^{slack} - V^{cal}_{i}) \bigg]
+    \end{split}
+\end{align}
+
+\subsection{Constraints}
+
+\begin{align}
+    P^{cal}_{i} = \sum_{\forall j}{V^{Cal}_{i}V^{Cal}_{j}(G_{ij}cos(\theta^{cal}_{i} - \theta^{cal}_{j}) + B_{ij}sin(\theta^{cal}_{i} - \theta^{cal}_{j}))}, \quad \forall i  \\
+    Q^{cal}_{i} = \sum_{\forall j}{V^{Cal}_{i}V^{Cal}_{j}(G_{ij}sin(\theta^{cal}_{i} - \theta^{cal}_{j}) - B_{ij}cos(\theta^{cal}_{i} - \theta^{cal}_{j}))}, \quad \forall i \\
+    P^{min}_{i} \leq P^{cal}_{i} \leq P^{max}_{i}, \quad \forall i\\
+    Q^{min}_{i} \leq Q^{cal}_{i} \leq Q^{max}_{i}, \quad \forall i\\
+    P^{min}_{i} = \alpha_{i}P^{gen,min}_{i}-\beta_{i}P^{load,min}_{i} - \omega_{i}\infty\\
+    P^{max}_{i} = \alpha_{i}P^{gen,max}_{i}-\beta_{i}P^{load,max}_{i} + \omega_{i}\infty\\
+    Q^{min}_{i} = \alpha_{i}Q^{gen,min}_{i}-\beta_{i}Q^{load,min}_{i} - \omega_{i}\infty\\
+    Q^{max}_{i} = \alpha_{i}Q^{gen,max}_{i}-\beta_{i}Q^{load,max}_{i} + \omega_{i}\infty\\
+    P^{known}_{i} = \alpha_{i}P^{gen}_{i}-\beta_{i}P^{load}_{i}\\
+    Q^{known}_{i} = \alpha_{i}Q^{gen}_{i}-\beta_{i}Q^{load}_{i}\\
+    V^{cal}_{i} \geq 0, \quad \forall i\\
+    -\infty \leq \theta^{cal}_{i} \leq \infty, \quad \forall i\\
+    \omega_{i}V^{cal}_{i} \leq V^{slack}, \quad \forall i\\
+    \alpha_{i}V^{cal}_{i} \leq V^{known}_{i}, \quad \forall i\\
+    \omega_{i}\theta^{cal}_{i} = 0, \quad \forall i
+\end{align}
+
+\end{document}
