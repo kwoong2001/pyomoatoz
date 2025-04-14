@@ -12,3 +12,5 @@ def create_set_and_params(np,pd,pre_caldata_path,Bus_set):
             row_data_text = str(bus_i)
             open_file.write(row_data_text + '\n')
             row_count+=1
+            
+    print('Bus set File saved in:'+pre_caldata_path + 'Buses_Pyomo.csv')
