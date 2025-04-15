@@ -3,13 +3,15 @@ import numpy as np
 import pandas as pd
 import math
 
+
 from pyomo.environ import *
+
 
 def read(file_path: str, sheet_name: str):
     df = pd.read_excel(file_path, sheet_name=sheet_name, engine='openpyxl')
     return df.to_numpy()
 
-file_path = 'C:\\project\\github\\pyomoatoz#\\nthPractice\\ac_case25.xlsx'
+file_path = 'pyomoatoz#\\nthPractice\\case25pyomo\\ac_case25.xlsx'
 BUS = read(file_path, 'bus')
 GEN = read(file_path, 'generator')
 TR = read(file_path, 'transformer')
