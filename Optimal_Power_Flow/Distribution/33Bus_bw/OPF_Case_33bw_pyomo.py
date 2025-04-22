@@ -1,0 +1,43 @@
+"""
+OPF_Case_33bw
+V2(예정): PU 단위의 OPF 문제를 정식화하고 결과를 도출하는 코드 구성
+
+V1: Pandapower로 부터 불러온 계통 모델을 기반으로 Pyomo에 최적화 문제를 해결할 수 있도록 구성
+"""
+
+import pandapower as pp
+import pandapower.networks as pn
+import pandas as pd
+import numpy as np
+import os
+import pyomo.environ as pyo
+from Packages.Set_values import *
+from Packages.OPF_Creator import *
+
+# Set save parameter directory
+save_directory = os.path.dirname(__file__) + "/Pre_cal_data/"
+
+# Load Pandapower Case
+net = pn.case33bw()
+
+# Run loadflow
+pp.runpp(net,numba=False)
+base_MVA = net._ppc['baseMVA'] #Base MVA
+
+# Set values and parameters (Bus, Line, Gen, Load, Ymatrix)
+[Bus_info, Line_info, Gen_info, Load_info, Y_mat_info]=Set_All_Values(np,pd,save_directory,net)
+
+# OPF Model Create
+model = OPF_model_creator(pyo,Bus_info)
+
+# Create instance for OPF Model
+os.chdir(save_directory)
+instance = model.create_instance(save_directory + 'Model_data.dat')
+os.chdir(os.path.dirname(__file__))
+
+print('Initializing OPF model...')
+optimizer = pyo.SolverFactory('ipopt') 
+optimizer.options["max_iter"] = 100000
+
+print('Solving OPF model...')
+Problem = optimizer.solve(instance,tee=True)
