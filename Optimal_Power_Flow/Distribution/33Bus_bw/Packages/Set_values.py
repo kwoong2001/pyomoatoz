@@ -50,7 +50,10 @@ def Set_Line(pd,save_directory,net):
 
     Line_info.index.name = 'Line_l'
     Line_info.index = Line_info.index + 1
-    Line_info
+    
+    tmp = pd.DataFrame(Line_info.index)
+    tmp.columns = ['Lines'] 
+    tmp.to_csv(save_directory+'Lines_set_for_pyomo.csv',index=False) # For Pyomo Sets
 
     Line_info.to_csv(save_directory+'Line_info.csv')
     
@@ -107,7 +110,11 @@ def Set_Gen(pd,save_directory,net):
         gen_info.reset_index(inplace=True,drop=True)
         gen_info.index = gen_info.index + 1
         gen_info.index.name = 'G_n'
-
+    
+    tmp = pd.DataFrame(gen_info.index)
+    tmp.columns = ['Gens'] 
+    tmp.to_csv(save_directory+'Gens_set_for_pyomo.csv',index=False) # For Pyomo Sets
+    
     gen_info.to_csv(save_directory+'Gen_info.csv')
     
     return gen_info
@@ -115,16 +122,21 @@ def Set_Gen(pd,save_directory,net):
 def Set_Load(pd,save_directory,net):
     Load_column = ['bus','p_mw','q_mvar','in_service']
     Load_info = pd.DataFrame(columns = Load_column)
-    if 0 == net.load['bus'][0]:
+    if 0 == net.bus['name'][0]:
         Load_info['bus']=net.load['bus'] + 1
     else:
         Load_info['bus']=net.load['bus']
+    
     Load_info['p_mw'] = net.load['p_mw']
     Load_info['q_mvar'] = net.load['q_mvar']
     Load_info['in_service'] = net.load['in_service']
 
     Load_info.index.name = 'Load_d'
     Load_info.index=Load_info.index+1
+    
+    tmp = pd.DataFrame(Load_info.index)
+    tmp.columns = ['Loads'] 
+    tmp.to_csv(save_directory+'Loads_set_for_pyomo.csv',index=False) # For Pyomo Sets
 
     Load_info.to_csv(save_directory+'Load_info.csv')
     
