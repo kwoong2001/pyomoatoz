@@ -122,7 +122,7 @@ def Set_Gen(pd,save_directory,net):
 def Set_Load(pd,save_directory,net):
     Load_column = ['bus','p_mw','q_mvar','in_service']
     Load_info = pd.DataFrame(columns = Load_column)
-    if 0 == net.bus['name'][0]:
+    if 0 == net.bus['name'][0] or 0 == net.load['bus'][0]:
         Load_info['bus']=net.load['bus'] + 1
     else:
         Load_info['bus']=net.load['bus']

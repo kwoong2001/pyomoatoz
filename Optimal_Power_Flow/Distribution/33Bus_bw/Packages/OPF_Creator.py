@@ -1,5 +1,12 @@
 """
-OPF model creator
+OPF model creator for balanced system
+- PU를 적용하여 OPF를 풀 수 있는 시스템에 적용 가능
+- Unbalanced system은 PU를 적용하기에 까다로울 것임
+
+V4: 선로 rating 제약조건 걸어보기
+
+250424_V3: 발전 비용을 반영한 OPF 문제 구성
+
 250424_V2: PU 단위에서 OPF를 풀 수 있도록 구성
 
 250422_V1: 모선 전압의 제곱 합 최소화 최적화 문제
@@ -95,11 +102,16 @@ def OPF_model_creator(pyo,base_MVA,Slackbus,Bus_info,Line_info,Load_info,Gen_inf
         return model.QGen[i] - model.QDem[i]
     model.Q_inj = pyo.Expression(model.Buses,rule = Q_inj_rule)
     
+    """
+    Generation cost
+    """
+    def P_cost_rule(model, i):
+        return (sum(Gen_info.loc[n,'cp0_eur'] for n in model.Gens if Gen_info.loc[n,'bus'] == i)) + (sum(Gen_info.loc[n,'cp1_eur_per_mw'] for n in model.Gens if Gen_info.loc[n,'bus'] == i)) * model.PGen[i]*base_MVA + (sum(Gen_info.loc[n,'cp2_eur_per_mw2'] for n in model.Gens if Gen_info.loc[n,'bus'] == i)) * (model.PGen[i]*base_MVA)**2
+    model.P_cost = pyo.Expression(model.Buses,rule=P_cost_rule)
+    
     
     def Objective_rule(model):
-        return  sum(model.PGen[i] for i in model.Buses)
-        #return model.P_losses_total
-        #return  sum(model.P_gen_cost[i] for i in model.Buses)
+        return sum(model.P_cost[i] for i in model.Buses)
     model.obj = pyo.Objective(rule=Objective_rule,sense=pyo.minimize)
     
     return model
