@@ -1,6 +1,8 @@
 """
 OPF_Case_33bw
-V4: 선로 rating 제약조건 걸어보기
+V5: 결과를 담을 수 있는 엑셀 파일 등 구성
+
+250425_V4: 선로 rating 제약조건 반영, Sending and receiving power and current 반영, Slack 검출 코드 반영
 
 250424_V3: 발전 비용을 반영한 OPF 문제 구성 및 Dual Variable 추출
 
@@ -22,28 +24,43 @@ from Packages.OPF_Creator import *
 Set model and parameters with Pandapower
 """
 
-# Set save parameter directory
-save_directory = os.path.dirname(__file__) + "/Pre_cal_data/"
+## Set directory
+save_directory = os.path.dirname(__file__) + "/Pre_cal_data/"       # Set save parameter directory
+output_directory = os.path.dirname(__file__) + "/Output_data/"     # Set output directory
 
-# Load Pandapower Case
+# Set and load Pandapower Case
 net = pn.case33bw()
 
-# Set slack bus
-Slackbus = 1
+"""
+Run loadflow and load system data
+"""
 
 # Run loadflow
 pp.runpp(net,numba=False)
 base_MVA = net._ppc['baseMVA'] #Base MVA
 
+# Find and load slack bus
+Slackbus = 0
+if net._ppc['bus'][0][0] == 0:
+    compensation_idx_factor = 1
+else:
+    compensation_idx_factor = 0
+
+for busidx in range(net._ppc['bus'].shape[0]):
+    if net._ppc['bus'][busidx][1] == 3: 
+        Slackbus = int(net._ppc['bus'][busidx][0]) + compensation_idx_factor
+        
+print(f"{net.bus.shape[0]}-buses case, Slack bus: [{Slackbus}]")
+
 # Set values and parameters (Bus, Line, Gen, Load, Ymatrix)
 [Bus_info, Line_info, Gen_info, Load_info, Y_mat_info]=Set_All_Values(np,pd,save_directory,net)
 
 """
-Pyomo part
+Create OPF model and Run Pyomo
 """
 
 # OPF Model Create
-model = OPF_model_creator(pyo,base_MVA,Slackbus,Bus_info,Line_info,Load_info,Gen_info)
+model = OPF_model_creator(np,pyo,base_MVA,Slackbus,Bus_info,Line_info,Load_info,Gen_info)
 
 # Create instance for OPF Model
 os.chdir(save_directory)
@@ -100,6 +117,10 @@ print('----------------------------------------------------------------')
 print('Difference total gen MW:', P_total - (panda_gen_mw_total + panda_imports_mw_total))
 print('Difference total load MW:', D_total - (net.res_load['p_mw'].sum()))
 
+"""
+Export result file
+"""
+
 for bus in Bus_info.index:
     
     if instance.V_mag[bus].value >= 1e-4:
@@ -119,7 +140,27 @@ for c in instance.component_objects(pyo.Constraint, active=True):
     if str(c) == 'P_bal_con':
         print("   Constraint", c)
         for index in c:
-            print("      ", index, instance.dual[c[index]])   
-     
+            print("      ", index, instance.dual[c[index]])
+
+for c in instance.component_objects(pyo.Constraint, active=True):
+    if str(c) == 'P_gen_min_con':
+        print("   Constraint", c)
+        for index in c:
+            print("      ", index, instance.dual[c[index]])
+            
+for l in Line_info.index:
+    p_line_loss = instance.P_line_loss[l].expr()* base_MVA
+    q_line_loss = instance.Q_line_loss[l].expr()* base_MVA
+    base_current = base_MVA /Bus_info['vn_kv'][Line_info.loc[l,"from_bus"]] / np.sqrt(3)
+    I_line = instance.I_line_mag[l].expr()
+    I_line_loading_percent = instance.I_loading_percent[l].expr()
+    print(f"{l}-line current: {I_line:.5f} [A], loading percent: {I_line_loading_percent} [%]")
+    #print(f"{l}-line flow (receive) reactive power: {q_line:.2f} [MVar]")
+
+for c in instance.component_objects(pyo.Var, active=True):
+    if str(c) == 'P_bal_con':
+        print("   Constraint", c)
+        for index in c:
+            print("      ", index, instance.dual[c[index]])     
 
 print("solve done!")

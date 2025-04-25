@@ -13,6 +13,9 @@
   - 사이트
     - https://www.pyomo.org/
     - Ipopt solver 사용을 위하여 Conda를 이용하여 설치
+  
+- Tutorial
+  - https://www.datacamp.com/tutorial/pyomo
 
 
 ## Contents
