@@ -1,0 +1,2 @@
+G_n,bus,in_service,vm_pu,p_mw,max_p_mw,min_p_mw,min_q_mvar,max_q_mvar,cp0_eur,cp1_eur_per_mw,cp2_eur_per_mw2,cq0_eur,cq1_eur_per_mvar,cq2_eur_per_mvar2
+1,1,True,1.0,0,10.0,0.0,-10.0,10.0,0.0,20.0,0.0,0.0,0.0,0.0

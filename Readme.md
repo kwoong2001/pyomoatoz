@@ -13,11 +13,14 @@
   - 사이트
     - https://www.pyomo.org/
     - Ipopt solver 사용을 위하여 Conda를 이용하여 설치
+  
+- Tutorial
+  - https://www.datacamp.com/tutorial/pyomo
 
 
 ## Contents
 ### 1. Basic ([Description of Basic (Nonlinear problem)](./Basic/Nonliear_problem/Readme_test_nonlinear.md))
 - 기본적인 Pyomo 실행 및 예제 코드
 
-### 2. Case: Power Flow ([Power Flow Calculation](./Power_flow/Readme_powerflow.md))
-- 조류계산
+### 2. Case: Optimal Power Flow ([Optimal Power Flow](./Optimal_Power_Flow/Readme_optimal_power_flow.md))
+- 최적조류계산
