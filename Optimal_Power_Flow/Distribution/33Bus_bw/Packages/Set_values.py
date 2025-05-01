@@ -1,4 +1,10 @@
 """
+250501: Branch 데이터 중 Switch가 있는 성분은 _with_switch라는 함수를 사용하여 선로의 상태를 반영
+
+250429까지: 기본적인 Bus, Branch, Gen, Load, Y Bus 생성
+"""
+
+"""
 Set parameters and values
 - Bus Data
 - Branch Data
@@ -169,3 +175,44 @@ def Creating_Y_matrix(np,pd,save_directory,net):
     Y_mat_info.to_csv(save_directory+'Y_mat_info.csv')
     
     return Y_mat_info
+
+# 선로의 상태를 반영할 수 있는 변수 추가
+def Set_All_Values_with_switch(np,pd,save_directory,net,previous_line_df):
+    #Bus info
+    Bus_info = Set_Bus(pd,save_directory,net)
+    #Line info
+    Line_info = Set_Line_with_switch(pd,save_directory,net,previous_line_df)
+    #Gen info
+    Gen_info = Set_Gen(pd,save_directory,net)
+    #Load info
+    Load_info = Set_Load(pd,save_directory,net)
+    # Ymatrix
+    Y_mat_info = Creating_Y_matrix(np,pd,save_directory,net)
+
+    return Bus_info, Line_info, Gen_info, Load_info, Y_mat_info
+
+# 선로의 상태를 반영할 수 있는 변수 추가
+def Set_Line_with_switch(pd,save_directory,net,previous_line_df):
+    Line_column = ['from_bus','to_bus','r_ohm','x_ohm','c_nf','in_service','in_service (initial)','max_i_ka','max_loading_percent']
+    Line_info = pd.DataFrame(columns = Line_column)
+
+    Line_info['from_bus'] = net.line['from_bus'].values +1
+    Line_info['to_bus'] = net.line['to_bus'].values +1
+    Line_info['r_ohm'] = net.line['length_km'].values * net.line['r_ohm_per_km'].values
+    Line_info['x_ohm'] = net.line['length_km'].values * net.line['x_ohm_per_km'].values
+    Line_info['c_nf'] = net.line['length_km'].values * net.line['c_nf_per_km'].values
+    Line_info['in_service'] = net.line['in_service']
+    Line_info['in_service (initial)'] = previous_line_df['in_service']
+    Line_info['max_i_ka'] = net.line['max_i_ka']
+    Line_info['max_loading_percent'] = net.line['max_loading_percent']
+
+    Line_info.index.name = 'Line_l'
+    Line_info.index = Line_info.index + 1
+    
+    tmp = pd.DataFrame(Line_info.index)
+    tmp.columns = ['Lines'] 
+    tmp.to_csv(save_directory+'Lines_set_for_pyomo.csv',index=False) # For Pyomo Sets
+
+    Line_info.to_csv(save_directory+'Line_info.csv')
+    
+    return Line_info
