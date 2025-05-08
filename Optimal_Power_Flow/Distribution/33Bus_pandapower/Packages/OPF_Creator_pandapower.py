@@ -203,6 +203,7 @@ def OPF_model_creator(np,pyo,base_MVA,Slackbus,Bus_info,Line_info,Load_info,Gen_
     # Power injection at each node
     def P_bal_rule(model, i):
         return model.PGen[i] - model.PDem[i] == model.V_mag[i] * ( sum (model.V_mag[j] * ( model.Bus_G[i,j] * pyo.cos(model.V_ang[i]-model.V_ang[j]) + model.Bus_B[i,j]* pyo.sin(model.V_ang[i]-model.V_ang[j]) ) for j in model.Buses ) )
+        #return model.PGen[i] - model.PDem[i] == ( sum (model.P_line_flow_sending[l]/base_MVA for l in Line_info.index if Line_info.loc[l,"from_bus"] == i ) ) + ( sum (model.P_line_flow_receiving[l]/base_MVA for l in Line_info.index if Line_info.loc[l,"to_bus"] == i ) )
     model.P_bal_con = pyo.Constraint(model.Buses,rule=P_bal_rule)
     
     def Q_bal_rule(model, i):
@@ -335,16 +336,21 @@ def OPF_model_creator_with_switch(np,pyo,base_MVA,Slackbus,Bus_info,Line_info,Lo
     Recreation of G and B
     """
     ##Line status variable
-    model.Line_Status = pyo.Var(model.Lines, within=pyo.Binary, initialize=1)
+    model.Line_Status = pyo.Var(model.Lines, within=pyo.Integers, bounds=(0, 1),initialize = 0)
     
     ##Line status constraint
     def Line_status_rule(model,l):
-        if Line_info.loc[l,'in_service (initial)'] == True:
-            return model.Line_Status[l] == 1
-        else:
-            return model.Line_Status[l] == 0
-    model.Line_status_ini_con = pyo.Constraint(model.Lines, rule = Line_status_rule)
+        #line_con = Line_info[['from_bus','to_bus']].values.tolist()
+        
+        return model.Line_Status[l] <= 1
+                        
+    model.Line_Status_con = pyo.Constraint(model.Lines, rule = Line_status_rule)
     
+    #def Line_total_status_rule(model):
+    #    return sum ( sum(model.Line_Status[i,j] for j in model.Buses) for i in model.Buses) <= (37) * 2 
+    
+    #model.Line_total_status_con = pyo.Constraint(rule = Line_total_status_rule)
+        
     
     """
     Power - Line (Unit:MW, MVar)
@@ -408,7 +414,9 @@ def OPF_model_creator_with_switch(np,pyo,base_MVA,Slackbus,Bus_info,Line_info,Lo
     model.I_line_im = pyo.Expression(model.Lines,rule = I_line_im_rule)
     
     def I_line_sq_rule(model,l):
-        return model.I_line_re[l] ** 2 + model.I_line_im[l] ** 2
+        i = Line_info.loc[l,'from_bus']
+        j = Line_info.loc[l,'to_bus']
+        return (model.I_line_re[l] ** 2 + model.I_line_im[l] ** 2)
     model.I_line_sq = pyo.Expression(model.Lines,rule = I_line_sq_rule)
     
     def I_line_mag_rule(model,l):
@@ -432,11 +440,11 @@ def OPF_model_creator_with_switch(np,pyo,base_MVA,Slackbus,Bus_info,Line_info,Lo
     """
     # Power injection at each node
     def P_bal_rule(model, i):
-        return model.PGen[i] - model.PDem[i] == model.V_mag[i] * ( sum (model.V_mag[j] * ( model.Bus_G[i,j] * pyo.cos(model.V_ang[i]-model.V_ang[j]) + model.Bus_B[i,j]* pyo.sin(model.V_ang[i]-model.V_ang[j]) ) for j in model.Buses ) )
+        return model.PGen[i] - model.PDem[i] == ( sum (model.Line_Status[l]*model.P_line_flow_sending[l]/base_MVA for l in Line_info.index if Line_info.loc[l,"from_bus"] == i ) ) + ( sum (model.Line_Status[l]*model.P_line_flow_receiving[l]/base_MVA for l in Line_info.index if Line_info.loc[l,"to_bus"] == i ) )
     model.P_bal_con = pyo.Constraint(model.Buses,rule=P_bal_rule)
     
     def Q_bal_rule(model, i):
-        return model.QGen[i] - model.QDem[i] == model.V_mag[i] * ( sum (model.V_mag[j] * ( model.Bus_G[i,j] * pyo.sin(model.V_ang[i]-model.V_ang[j]) - model.Bus_B[i,j]* pyo.cos(model.V_ang[i]-model.V_ang[j]) ) for j in model.Buses ) )
+        return model.QGen[i] - model.QDem[i] == ( sum (model.Line_Status[l]*model.Q_line_flow_sending[l]/base_MVA for l in Line_info.index if Line_info.loc[l,"from_bus"] == i ) ) + ( sum (model.Line_Status[l]*model.Q_line_flow_receiving[l]/base_MVA for l in Line_info.index if Line_info.loc[l,"to_bus"] == i ) )
     model.Q_bal_con = pyo.Constraint(model.Buses,rule=Q_bal_rule)
     
     # Power injection value (Gen - Demand)
@@ -457,10 +465,10 @@ def OPF_model_creator_with_switch(np,pyo,base_MVA,Slackbus,Bus_info,Line_info,Lo
     
     """
     Objective Function
-     - Minimize generation cost
+     - Minimize loss
     """
     def Objective_rule(model):
-        return sum(model.P_cost[i] for i in model.Buses)
+        return sum(model.P_line_loss[l] for l in model.Lines)
     model.obj = pyo.Objective(rule=Objective_rule,sense=pyo.minimize)
     
     return model
