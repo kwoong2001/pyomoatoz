@@ -387,13 +387,13 @@ def OPF_model_creator_with_switch(np,pyo,base_MVA,Slackbus,Bus_info,Line_info,Lo
     def P_line_loss_rule(model,l):
         i = Line_info.loc[l,'from_bus']
         j = Line_info.loc[l,'to_bus']
-        return (model.P_line_flow_sending[l] + model.P_line_flow_receiving[l]) * base_MVA
+        return (model.P_line_flow_sending[l] + model.P_line_flow_receiving[l])
     model.P_line_loss = pyo.Expression(model.Lines,rule = P_line_loss_rule)
     
     def Q_line_loss_rule(model,l):
         i = Line_info.loc[l,'from_bus']
         j = Line_info.loc[l,'to_bus']
-        return (model.Q_line_flow_sending[l] + model.Q_line_flow_receiving[l]) * base_MVA
+        return (model.Q_line_flow_sending[l] + model.Q_line_flow_receiving[l])
     model.Q_line_loss = pyo.Expression(model.Lines,rule = Q_line_loss_rule)
     
     """
