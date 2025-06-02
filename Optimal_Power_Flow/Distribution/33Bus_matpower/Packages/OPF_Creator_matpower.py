@@ -40,16 +40,20 @@ def OPF_model_creator_without_switch(np,pyo,base_MVA,Slackbus,Bus_info,Line_info
     model.Bus_G = pyo.Param(model.Buses,model.Buses,within=pyo.Any) # Network conductivity matrix
     model.Bus_B = pyo.Param(model.Buses,model.Buses,within=pyo.Any) # Network susceptance matrix
     
-    """
-    Voltage
-    2 Variables - Voltage magnitude [PU], angle
-    2 Constraints
-    2 Expression - Voltage magnitude [kV], angle [deg]
-    """
     # Voltage variable
     model.V_mag = pyo.Var(model.Buses,within=pyo.NonNegativeReals,initialize = 1)  # Voltage magnitude
     model.V_ang = pyo.Var(model.Buses,within=pyo.Reals,initialize = 0)  # Voltage angle
     
+    #Generation variable
+    model.PGen = pyo.Var(model.Buses, within=pyo.Reals, initialize=0.0)
+    model.QGen = pyo.Var(model.Buses, within=pyo.Reals, initialize=0.0)
+    
+    
+    """
+    Voltage
+    2 Constraints
+    2 Expression - Voltage magnitude [kV], angle [deg]
+    """
     # Voltage limit
     def V_limits_rule(model, i):
         return (Bus_info['Vmin_pu'][i],model.V_mag[i],Bus_info['Vmax_pu'][i])
@@ -74,14 +78,10 @@ def OPF_model_creator_without_switch(np,pyo,base_MVA,Slackbus,Bus_info,Line_info
     
     """
     Power - Bus
-    2 Variables - Active power and reactive power (Unit:PU)
     2 Constraints
     2 Expressions - Demand
     2 Expressions - Convert PU to MW,MVar
     """
-    #Generation variable
-    model.PGen = pyo.Var(model.Buses, within=pyo.Reals, initialize=0.0)
-    model.QGen = pyo.Var(model.Buses, within=pyo.Reals, initialize=0.0)
     
     #Active power at each node - Unit:PU
     def P_gen_min_rule(model,i):
@@ -190,16 +190,10 @@ def OPF_model_creator_without_switch(np,pyo,base_MVA,Slackbus,Bus_info,Line_info
         return pyo.sqrt(model.I_line_sq[l]) * base_current 
     model.I_line_mag = pyo.Expression(model.Lines,rule = I_line_mag_rule)
     
-    """
-    def I_loading_percent_rule(model,l):
-        return model.I_line_mag[l] / Line_info.loc[l,"max_i_ka"] * 100
-    model.I_loading_percent = pyo.Expression(model.Lines,rule = I_loading_percent_rule)
-    
     def I_loading_con_rule(model,l):
         base_current = base_MVA /Bus_info['baseKV'][Line_info.loc[l,"from_bus"]] / np.sqrt(3)
-        return model.I_line_sq[l] <= (Line_info.loc[l,"max_i_ka"]/base_current) ** 2
+        return model.I_line_sq[l] <= (9999999/base_current) ** 2
     model.I_loading_con = pyo.Constraint(model.Lines,rule = I_loading_con_rule)
-    """
         
     """
     Balance (Generation - Demand)

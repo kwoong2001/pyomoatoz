@@ -435,6 +435,7 @@
 	\frametitle{Overview}
 	Depicted by latex..
 	\begin{itemize}
+		\item Nomenclature
 		\item Objective function
 		\item Constraints
 			\begin{itemize}
@@ -445,6 +446,129 @@
 
 %------------------------------------------------
 
+\subsection{Nomenclature}
+
+\begin{frame}
+	\frametitle{Nomenclature}
+	\framesubtitle{Sets, indices, parameters}
+
+	\begin{columns}
+	
+		\begin{column}{0.5\textwidth}
+			
+			\begin{itemize}
+			\item Indices
+			\end{itemize}
+
+			\begin{tabular}{ll}
+				$i,j$ & Index of bus \\
+				$l$ & Index of line \\
+			\end{tabular}
+			
+			\bigskip
+			
+			\begin{itemize}
+			\item Sets
+			\end{itemize}
+
+			\begin{tabular}{ll}
+				$\Omega_{l}$ & Set of lines \\
+				$\Omega_{b}$ & Set of buses\\
+				$\Omega_{b_{i}}$ & \begin{tabular}[l]{@{}l@{}}Set of connected buses \\ in the bus $i$\end{tabular}\\
+				$\Omega_{b_{g}}$ & \begin{tabular}[l]{@{}l@{}}Set of generation buses \\ ($\Omega_{b_{g}}$ $\subset$ $\Omega_{b}$)\end{tabular}\\
+			\end{tabular}
+
+		\end{column}
+
+		\begin{column}{0.5\textwidth}
+			\begin{itemize}
+			\item Parameters or constants
+			\end{itemize}
+
+			\begin{tabular}{ll}
+				$Z_{ij}$, $Y_{ij}$ & \begin{tabular}[l]{@{}l@{}}Impedance and \\admittance of line $ij$\\(from bus $i$ to bus $j$)\end{tabular} \\
+				$G_{ij}$, $B_{ij}$ & \begin{tabular}[l]{@{}l@{}}Conductance and \\susceptance of line $ij$\\(from bus $i$ to bus $j$)\end{tabular} \\
+				$baseMVA$ & Value of base MVA \\
+				$\overline{V}$, $\underline{V}$ & \begin{tabular}[l]{@{}l@{}}Maximum and minimum \\voltage magnitude\end{tabular}\\
+				$\overline{I}_{ij}$ & \begin{tabular}[l]{@{}l@{}}Maximum current \\ flow limit of line $ij$\end{tabular}\\
+			\end{tabular}
+
+		\end{column}
+
+	\end{columns}
+
+\end{frame}
+
+%------------------------------------------------
+
+\begin{frame}
+	\frametitle{Nomenclature}
+	\framesubtitle{Sets, indices, parameters}
+
+	\begin{columns}
+
+		\begin{column}{0.5\textwidth}
+			\begin{itemize}
+			\item Parameters or constants (Continued)
+			\end{itemize}
+
+			\begin{tabular}{ll}
+				$P_{D_{i}}$, $Q_{D_{i}}$ & \begin{tabular}[l]{@{}l@{}}Active and reactive \\ power demand at bus $i$\end{tabular}\\
+				$\overline{P}_{G_{i}}$, $\underline{P}_{G_{i}}$ & \begin{tabular}[l]{@{}l@{}}Maximum and minimum \\active power from generator \\ at bus $i$\end{tabular}\\
+				$\overline{Q}_{G_{i}}$, $\underline{Q}_{G_{i}}$ & \begin{tabular}[l]{@{}l@{}}Maximum and minimum \\reactive power from \\ generator at bus $i$\end{tabular}\\
+			\end{tabular}
+
+		\end{column}
+
+		\begin{column}{0.5\textwidth}
+			\begin{itemize}
+			\item Functions
+			\end{itemize}
+
+			\begin{tabular}{ll}
+				$P_{i}$, $Q_{i}$ & \begin{tabular}[l]{@{}l@{}}Active and reactive \\ power calculated at bus $i$\end{tabular}\\
+				$P_{ij}$, $Q_{ij}$& \begin{tabular}[l]{@{}l@{}}Active and reactive \\ power flow of line $ij$\end{tabular}\\
+				$I_{r_{ij}}$, $I_{Im_{ij}}$& \begin{tabular}[l]{@{}l@{}}Real and Imaginary \\ current flow of line $ij$\end{tabular}\\
+				$P^{loss}_{ij}$, $Q^{loss}_{ij}$& \begin{tabular}[l]{@{}l@{}}Active and reactive \\ line loss of line $ij$\end{tabular}\\
+			\end{tabular}
+
+		\end{column}
+
+	\end{columns}
+
+\end{frame}
+
+%------------------------------------------------
+
+\begin{frame}
+	\frametitle{Nomenclature}
+	\framesubtitle{Variables}
+
+	\begin{columns}
+
+	
+		\begin{column}{0.5\textwidth}
+			\begin{itemize}
+			\item Varaibles
+			\end{itemize}
+
+			\begin{tabular}{ll}
+				$\left|\dot{V}_{i} \right|$ & Voltage magnitude in bus $i$ \\
+				$\theta_{i}$ & Voltage phase angle in bus $i$  \\
+				$P_{G_{i}}$, $Q_{G_{i}}$ & \begin{tabular}[l]{@{}l@{}}Active and reactive power \\from generator at bus $i$\end{tabular}\\
+			\end{tabular}
+
+			\bigskip
+
+		\end{column}
+
+	\end{columns}
+
+\end{frame}
+
+%------------------------------------------------
+
+
 \subsection{Objective function}
 
 \begin{frame}
@@ -454,13 +578,109 @@
 	\end{align}
 
 	\begin{align}
-		P_{l}^{line loss} = P_{l}^{line sending} + P_{l}^{line receiving}
+		P_{l}^{line loss} = P_{ij} + P_{ji} \quad \quad \forall l \in \Omega_{l} \quad \text{or} \quad \forall (ij) \in \Omega_{l}
 	\end{align}
+
+	\begin{align}
+		\begin{split}
+		P_{ij} = &-G_{ij} \left|\dot{V}_{i} \right| \left|\dot{V}_{i} \right| 
+		+ G_{ij} \left|\dot{V}_{i} \right| \left|\dot{V}_{j} \right| \cos\left(\theta_{i}-\theta_{j} \right) \\
+		&+ B_{ij} \left|\dot{V}_{i} \right| \left|\dot{V}_{j} \right| \sin\left(\theta_{i}-\theta_{j} \right) 
+		\quad \quad \forall l \in \Omega_{l} \quad \text{or} \quad \forall (ij) \in \Omega_{l}
+		\end{split}
+	\end{align}
+
+	\begin{align}
+		\begin{split}
+		P_{ji}=&-G_{ij} \left|\dot{V}_{j} \right| \left|\dot{V}_{j} \right| 
+		+ G_{ij} \left|\dot{V}_{i} \right| \left|\dot{V}_{j} \right| \cos\left(\theta_{i}-\theta_{j} \right)\\
+		&- B_{ij} \left|\dot{V}_{i} \right| \left|\dot{V}_{j} \right| \sin\left(\theta_{i}-\theta_{j} \right)
+		\quad \quad \forall l \in \Omega_{l} \quad \text{or} \quad \forall (ij) \in \Omega_{l}
+		\end{split}
+	\end{align}
+
+
 \end{frame}
 
 %------------------------------------------------
 
 \subsection{Constraints}
+
+\begin{frame}
+	\frametitle{Constraints}
+	\framesubtitle{Load balance} % Optional subtitle
+
+	\begin{align}
+		P_{G_{i}} - P_{D_{i}} = \sum_{j \in \Omega_{b_{i}}}(P_{ij})  \quad \forall i \in \Omega_{b}
+	\end{align}
+
+	\begin{align}
+		Q_{G_{i}} - Q_{D_{i}} = \sum_{j \in \Omega_{b_{i}}}(Q_{ij})  \quad \forall i \in \Omega_{b}
+	\end{align}
+
+	\begin{align}
+		\begin{split}
+			Q_{ij}=&B_{ij}\left\lvert \dot{V}_{i}\right\rvert^{2} + G_{ij}\left\lvert \dot{V}_{i}\right\rvert\left\lvert \dot{V}_{j}\right\rvert \sin{\left(\theta_{i}-\theta_{j}\right)} \\
+			&- B_{ij}\left\lvert \dot{V}_{i}\right\rvert\left\lvert \dot{V}_{j}\right\rvert \cos{\left(\theta_{i}-\theta_{j}\right)}  \quad   \forall l \in \Omega_{l} \quad \text{or} \quad \forall (ij) \in \Omega_{l}
+		\end{split}
+	\end{align}
+
+	
+\end{frame}
+
+%------------------------------------------------
+
+\begin{frame}
+	\frametitle{Constraints}
+	\framesubtitle{Power and voltage} % Optional subtitle
+
+	\begin{align}
+		\underline{P}_{G_{i}} \leq P_{G_{i}} \leq \overline{P}_{G_{i}}  \quad \forall i \in \Omega_{b}
+	\end{align}
+
+	\begin{align}
+		\underline{Q}_{G_{i}} \leq Q_{G_{i}} \leq \overline{Q}_{G_{i}}  \quad \forall i \in \Omega_{b}
+	\end{align}
+
+	\begin{align}
+		\underline{V} \leq \left|\dot{V}_{i} \right| \leq \overline{V}  \quad \forall i \in \Omega_{b}
+	\end{align}
+
+	\begin{align}
+		\theta_{i} = 0  \quad \text{if bus } i \quad \text{is slack bus.}
+	\end{align}
+
+	
+\end{frame}
+
+%------------------------------------------------
+
+\begin{frame}
+	\frametitle{Constraints}
+	\framesubtitle{Current} % Optional subtitle
+
+	\begin{align}
+		I_{r_{ij}}^{2}+ I_{Im_{ij}}^{2} \leq \overline{I}_{ij}^{2} \quad   \forall l \in \Omega_{l} \quad \text{or} \quad \forall (ij) \in \Omega_{l}
+	\end{align}
+
+	\begin{align}
+		\begin{split}
+	 		I_{r_{ij}} = &-G_{ij}\left\lvert \dot{V}_{i} \right\rvert \cos{\theta_{i}} + B_{ij}\left\lvert \dot{V}_{i} \right\rvert \sin{\theta_{i}} \\
+					&+ G_{ij}\left\lvert \dot{V}_{j} \right\rvert \cos{\theta_{j}} - B_{ij}\left\lvert \dot{V}_{j} \right\rvert \sin{\theta_{j}} \quad \forall l \in \Omega_{l} \quad \text{or} \quad \forall (ij) \in \Omega_{l}
+		\end{split}
+	\end{align}
+
+	\begin{align}
+		\begin{split}
+	 		I_{Im_{ij}} = &-B_{ij}\left\lvert \dot{V}_{i} \right\rvert \cos{\theta_{i}} - G_{ij}\left\lvert \dot{V}_{i} \right\rvert \sin{\theta_{i}} \\
+			&+ B_{ij}\left\lvert \dot{V}_{j} \right\rvert \cos{\theta_{j}} + G_{ij}\left\lvert \dot{V}_{j} \right\rvert \sin{\theta_{j}} \quad \forall l \in \Omega_{l} \quad \text{or} \quad \forall (ij) \in \Omega_{l}
+		\end{split}
+	\end{align}
+
+	
+\end{frame}
+
+%------------------------------------------------
 
 \begin{frame}
 	\frametitle{Constraints}
