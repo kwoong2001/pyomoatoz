@@ -1,7 +1,7 @@
 """
-OPF_Case_33bw_with_switch_and_matpower
+OPF_Case_33bw_without_switch_and_matpower
 - Pandapower가 아닌 Matpower 에 기반한 OPF 구현
-- 69 모선까지는 결과 도출 가능, 118 모선 이상에서는 수정 필요
+- 선로 switching이 없는 버젼
 
 """
 
@@ -45,12 +45,6 @@ print(f"{len(buses)}-buses case, Slack bus: [{Slackbus}]")
 
 # Change disconnected line to connected line
 previous_branch_array = branches.copy()# Save disconnected lines data
-branch_idx = 1
-for branch in branches:
-    if branch[-3] == 0:
-        branch[-3] = 1
-        print(f"{branch_idx}-th line(from bus:{branch[0]}, to bus:{branch[1]}) disconnected --> connected")
-    branch_idx +=1
     
 # Set values and parameters (Bus, Line, Gen, Load, Ymatrix)
 [Bus_info, Line_info, Gen_info, Load_info, Y_mat_info]=Set_All_Values(np,pd,save_directory,m,mpc,previous_branch_array)
@@ -60,7 +54,7 @@ Create OPF model and Run Pyomo
 """
 
 # OPF Model Create
-model = OPF_model_creator_with_switch(np,pyo,base_MVA,Slackbus,Bus_info,Line_info,Load_info,Gen_info)
+model = OPF_model_creator_without_switch(np,pyo,base_MVA,Slackbus,Bus_info,Line_info,Load_info,Gen_info)
 
 # Create instance for OPF Model
 os.chdir(save_directory)
@@ -84,7 +78,7 @@ Problem = optimizer.solve(instance, opt='knitro')
 optimizer = pyo.SolverFactory('mindtpy')
 
 instance.dual = pyo.Suffix(direction=pyo.Suffix.IMPORT)
-Problem = optimizer.solve(instance,mip_solver="glpk", nlp_solver="ipopt",tee=True)
+Problem = optimizer.solve(instance,nlp_solver="ipopt",tee=True)
 print('Solving OPF model...')
 
 

@@ -1,4 +1,6 @@
 """
+250602: _with_switch라는 표현 삭제
+
 250507: Matpower 용으로 변환
 
 250501: Branch 데이터 중 Switch가 있는 성분은 _with_switch라는 함수를 사용하여 선로의 상태를 반영
@@ -17,11 +19,11 @@ Set parameters and values
 """
 
 # 선로의 상태를 반영할 수 있는 변수 추가
-def Set_All_Values_with_switch(np,pd,save_directory,m,mpc,previous_branch_array):
+def Set_All_Values(np,pd,save_directory,m,mpc,previous_branch_array):
     #Bus info
     Bus_info = Set_Bus(pd,save_directory,mpc)
     #Line info
-    Line_info = Set_Line_with_switch(pd,save_directory,m,mpc,previous_branch_array)
+    Line_info = Set_Line(pd,save_directory,m,mpc,previous_branch_array)
     #Gen info
     Gen_info = Set_Gen(pd,save_directory,mpc)
     #Load info
@@ -137,7 +139,7 @@ def Creating_Y_matrix(np,pd,save_directory,m,mpc):
 
 
 # 선로의 상태를 반영할 수 있는 변수 추가
-def Set_Line_with_switch(pd,save_directory,m,mpc,previous_branch_array):
+def Set_Line(pd,save_directory,m,mpc,previous_branch_array):
     branch_data_column = ['fbus','tbus','r_pu','x_pu','b_pu','rateA','rateB','rateC','ratio','angle','status','angmin','angmax']
     branch_data_df = pd.DataFrame(mpc['branch'],columns = branch_data_column)
     pre_branch_data_df = pd.DataFrame(previous_branch_array,columns = branch_data_column)
