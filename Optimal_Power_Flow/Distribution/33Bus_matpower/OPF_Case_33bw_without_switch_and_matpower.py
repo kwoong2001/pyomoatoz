@@ -63,22 +63,10 @@ os.chdir(os.path.dirname(__file__))
 
 print('Initializing OPF model...')
 
-"""
-NEOS 기반 Solver 활용 - 가입 필요 (무료)
-https://neos-server.org/neos/
-
-# formulate optimization model with NEOS
-os.environ['NEOS_EMAIL'] = ''
-optimizer = pyo.SolverManagerFactory('neos')
-instance.dual = pyo.Suffix(direction=pyo.Suffix.IMPORT)
-Problem = optimizer.solve(instance, opt='knitro')
-
-"""
-
-optimizer = pyo.SolverFactory('mindtpy')
+optimizer = pyo.SolverFactory('ipopt') #NLP Solver
 
 instance.dual = pyo.Suffix(direction=pyo.Suffix.IMPORT)
-Problem = optimizer.solve(instance,nlp_solver="ipopt",tee=True)
+Problem = optimizer.solve(instance,tee=True)
 print('Solving OPF model...')
 
 
