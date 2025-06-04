@@ -69,6 +69,7 @@
 \usepackage[ruled,vlined]{algorithm2e}
 \usepackage{algorithmicx}
 \usepackage{multicol}
+\usepackage{hyperref}
 
 %----------------------------------------------------------------------------------------
 %	SELECT INNER THEME
@@ -1065,13 +1066,79 @@
 
 %------------------------------------------------
 
-\subsection{Including Code}
-\begin{frame}[fragile]
-	\frametitle{Including Code}
+\subsection{Including Code - Matpower}
+\begin{frame}
+	\frametitle{Including Code - Matpower}
+	
+	See \href{https://github.com/kwoong2001/pyomoatoz/blob/main/Optimal_Power_Flow/Basic/33_Bus_Case_with_Matpower/OPF_Case_33bw_matpower.ipynb}{\beamergotobutton{file}} for the detailed code.\\
+	
+	Load the test case and execute optimal power flow:
+	\rule{\textwidth}{1pt}
+	
+	\begin{columns}
+		\begin{column}{0.5\textwidth}
+			\begin{figure}
+				\includegraphics[width=2 in,keepaspectratio]{mat_load_case.png}
+			\end{figure}
+		\end{column}
+
+		\begin{column}{0.5\textwidth}
+			\begin{figure}
+				\includegraphics[width=2.5 in,keepaspectratio]{mat_opf.png}
+			\end{figure}
+		\end{column}
+	\end{columns}
+
+	\rule{\textwidth}{1pt}
+
+\end{frame}
+	
+%------------------------------------------------
+
+\subsection{Including Code - Pyomo}
+\begin{frame}
+	\frametitle{Including Code - Pyomo}
+	
+	See \href{https://github.com/kwoong2001/pyomoatoz/blob/main/Basic/Nonliear_problem/test_nonlinear.py}{\beamergotobutton{file}} for the detailed code.\\
+	
+	Construct model and solve the optimization problem (Concrete model case):
+	\rule{\textwidth}{1pt}
+	
+	\begin{columns}
+		\begin{column}{0.5\textwidth}
+			\begin{figure}
+				\includegraphics[width=2 in,keepaspectratio]{pyomo_example.png}
+			\end{figure}
+		\end{column}
+	\end{columns}
+
+	\rule{\textwidth}{1pt}
+
+\end{frame}
+	
+%------------------------------------------------
+
+\subsection{Optimal power flow problem using Matpower and Pyomo}
+\begin{frame}
+	\frametitle{Optimal power flow problem using Matpower and Pyomo}
+
+	See \href{https://github.com/kwoong2001/pyomoatoz/blob/main/Optimal_Power_Flow/Distribution/33Bus_matpower/OPF_Case_33bw_without_switch_and_matpower.py}{\beamergotobutton{file}} for the detailed code.\\
+	
+	Construct OPF model and solve the OPF problem (Abstract model case):\\
+	\footnotesize (Abstract model example: \href{https://pyomo.readthedocs.io/en/6.8.0/pyomo_overview/abstract_concrete.html}{\beamergotobutton{site1}}, \href{https://medium.com/@ZiaH919/benchmarking-pyomo-13ab233d8d5b}{\beamergotobutton{site2}})
 
 	\rule{\textwidth}{1pt}
 	
+	\begin{columns}
+		\begin{column}{0.5\textwidth}
+			\begin{figure}
+				\includegraphics[width=2 in,keepaspectratio]{pyomo_example.png}
+			\end{figure}
+		\end{column}
+	\end{columns}
+
 	\rule{\textwidth}{1pt}
+
 
 \end{frame}
 	
