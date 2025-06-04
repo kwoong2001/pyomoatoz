@@ -7,7 +7,7 @@ OPF_Case_33bw_without_switch_and_matpower
 
 import pandas as pd
 import numpy as np
-import os
+import os, sys
 import pyomo.environ as pyo
 from Packages.Set_values_matpower import *
 from Packages.OPF_Creator_matpower import *
@@ -63,10 +63,21 @@ os.chdir(os.path.dirname(__file__))
 
 print('Initializing OPF model...')
 
+"""
+NEOS 기반 Solver 활용 - 가입 필요 (무료)
+https://neos-server.org/neos/
+- 제한은 있지만 사용하는 것을 추천, IPOPT나 GLPK는 무료이지만 안정적인 활용에 어려움이 많음
+
+# formulate optimization model with NEOS
+os.environ['NEOS_EMAIL'] = ''
+optimizer = pyo.SolverManagerFactory('neos')
+Problem = optimizer.solve(instance, opt='knitro')
+
+"""
 optimizer = pyo.SolverFactory('ipopt') #NLP Solver
 
-instance.dual = pyo.Suffix(direction=pyo.Suffix.IMPORT)
-Problem = optimizer.solve(instance,tee=True)
+
+Problem = optimizer.solve(instance, tee=True)
 print('Solving OPF model...')
 
 
