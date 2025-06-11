@@ -3,6 +3,8 @@ OPF model creator for balanced system
 - PU를 적용하여 OPF를 풀 수 있는 시스템에 적용 가능
 - Unbalanced system은 PU를 적용하기에 까다로울 것임
 
+250611_V7: Line loss 오류 수정
+
 250507_V6: Matpower 용으로 변환
 
 250501_V5: 선로의 상태를 고려한 최적화 문제를 구현하는 OPF_model_creator_with_switch 함수 생성 - G와 B가 Line status에 따라 재구성될 필요가 있음
@@ -98,13 +100,13 @@ def OPF_model_creator_without_switch(np,pyo,base_MVA,Slackbus,Bus_info,Line_info
     def P_line_loss_rule(model,l):
         i = Line_info.loc[l,'from_bus']
         j = Line_info.loc[l,'to_bus']
-        return (model.P_line_flow_sending[l] + model.P_line_flow_receiving[l]) * base_MVA
+        return (model.P_line_flow_sending[l] + model.P_line_flow_receiving[l])
     model.P_line_loss = pyo.Expression(model.Lines,rule = P_line_loss_rule)
     
     def Q_line_loss_rule(model,l):
         i = Line_info.loc[l,'from_bus']
         j = Line_info.loc[l,'to_bus']
-        return (model.Q_line_flow_sending[l] + model.Q_line_flow_receiving[l]) * base_MVA
+        return (model.Q_line_flow_sending[l] + model.Q_line_flow_receiving[l])
     model.Q_line_loss = pyo.Expression(model.Lines,rule = Q_line_loss_rule)
     
     """
