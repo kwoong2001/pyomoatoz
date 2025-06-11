@@ -1,4 +1,6 @@
 """
+250611: Set_gen 수정
+
 250602: _with_switch라는 표현 삭제
 
 250507: Matpower 용으로 변환
@@ -60,12 +62,26 @@ def Set_Gen(pd,save_directory,mpc):
     
     #%	1	startup	shutdown	n	x1	y1	...	xn	yn
     #%	2	startup	shutdown	n	c(n-1)	...	c0
-    mat_gen_cost_info_columns = ['type', 'startup',	'shutdown',	'n','c(2)','c(1)','c(0)']
+    mat_gen_cost_info_columns = ['type', 'startup',	'shutdown',	'n']
+    gen_columns = ['bus','in_service','vm_pu','p_mw','max_p_mw','min_p_mw','min_q_mvar','max_q_mvar']
+    
+    if mpc['gencost'][0][0].astype(int) == 1:
+        for n in range(int(mpc['gencost'][0][3])): # n
+            mat_gen_cost_info_columns.append('x'+str(n+1))
+            mat_gen_cost_info_columns.append('y'+str(n+1))
+            
+            gen_columns.append('x'+str(n+1))
+            gen_columns.append('y'+str(n+1))
+    else:
+        for n in range(int(mpc['gencost'][0][3]),0,-1): # n
+            mat_gen_cost_info_columns.append('c'+str(n-1))
+            gen_columns.append('c'+str(n-1))
+    
+    #Gen cost Data        
     mat_gen_cost_info = pd.DataFrame(mpc['gencost'], columns = mat_gen_cost_info_columns)
     
     #Gen Data
     gen_index = range(1,mat_gen_info.shape[0]+1)
-    gen_columns = ['bus','in_service','vm_pu','p_mw','max_p_mw','min_p_mw','min_q_mvar','max_q_mvar','c(2)','c(1)','c(0)']
     gen_info = pd.DataFrame(index = gen_index, columns = gen_columns)
     
     gen_info['bus']=mat_gen_info['bus'].astype(int).values
@@ -76,10 +92,8 @@ def Set_Gen(pd,save_directory,mpc):
     gen_info['min_p_mw']=mat_gen_info['Pmin'].values
     gen_info['min_q_mvar']=mat_gen_info['Qmin'].values
     gen_info['max_q_mvar']=mat_gen_info['Qmax'].values
-    gen_info['c(2)']=mat_gen_cost_info['c(2)'].values
-    gen_info['c(1)']=mat_gen_cost_info['c(1)'].values
-    gen_info['c(0)']=mat_gen_cost_info['c(0)'].values
-    
+    for cost_idx in gen_columns[gen_columns.index('max_q_mvar')+1:]:
+        gen_info[cost_idx]=mat_gen_cost_info[cost_idx].values
     
     tmp = pd.DataFrame(gen_info.index)
     tmp.columns = ['Gens'] 
