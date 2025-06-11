@@ -62,7 +62,11 @@ def OPF_model_creator_without_switch(np,pyo,base_MVA,Slackbus,Bus_info,Line_info
     model.V_ang = pyo.Var(model.Buses,within=pyo.Reals,initialize = 0)  # Voltage angle
     
     #Generation variable
-    model.PGen = pyo.Var(model.Buses, within=pyo.Reals, initialize=0.0)
+     # Generation Initialization
+    def P_gen_ini_rule(model,i):
+        return  (sum(Gen_info.loc[n,'p_mw']/base_MVA for n in model.Gens if Gen_info.loc[n,'bus'] == i))
+    
+    model.PGen = pyo.Var(model.Buses, within=pyo.Reals, initialize=P_gen_ini_rule)
     model.QGen = pyo.Var(model.Buses, within=pyo.Reals, initialize=0.0)
     
     
