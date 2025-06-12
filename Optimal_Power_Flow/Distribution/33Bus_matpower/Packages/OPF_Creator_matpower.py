@@ -460,7 +460,7 @@ def OPF_model_creator_with_switch(np,pyo,base_MVA,Slackbus,Bus_info,Line_info,Lo
     1 Expressions
     """
     def P_cost_rule(model, i):
-        return (sum(Gen_info.loc[n,'c(0)'] for n in model.Gens if Gen_info.loc[n,'bus'] == i)) + (sum(Gen_info.loc[n,'c(1)'] for n in model.Gens if Gen_info.loc[n,'bus'] == i)) * model.PGen[i]*base_MVA + (sum(Gen_info.loc[n,'c(2)'] for n in model.Gens if Gen_info.loc[n,'bus'] == i)) * (model.PGen[i]*base_MVA)**2
+        return (sum(Gen_info.loc[n,'c0'] for n in model.Gens if Gen_info.loc[n,'bus'] == i)) + (sum(Gen_info.loc[n,'c1'] for n in model.Gens if Gen_info.loc[n,'bus'] == i)) * model.PGen[i]*base_MVA + (sum(Gen_info.loc[n,'c2'] for n in model.Gens if Gen_info.loc[n,'bus'] == i)) * (model.PGen[i]*base_MVA)**2
     model.P_cost = pyo.Expression(model.Buses,rule=P_cost_rule)
     
     """
