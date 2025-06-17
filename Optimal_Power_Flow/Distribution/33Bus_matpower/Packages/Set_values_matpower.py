@@ -1,4 +1,6 @@
 """
+250612: Set_line 수정
+
 250611: Set_gen 수정
 
 250602: _with_switch라는 표현 삭제
@@ -167,6 +169,7 @@ def Set_Line(pd,save_directory,m,mpc,previous_branch_array):
     Line_info['r_pu'] = branch_data_df['r_pu'].values
     Line_info['x_pu'] = branch_data_df['x_pu'].values
     Line_info['b_pu'] = branch_data_df['b_pu'].values
+    Line_info['rate_MVA'] = branch_data_df['rateA'].values # rateA, MVA rating A (long term rating), rateB, MVA rating B (short term rating), rateC, MVA rating C (emergency rating)
     Line_info['in_service'] = branch_data_df['status'].astype(int).values
     Line_info['in_service (initial)'] = pre_branch_data_df['status'].astype(int).values
     
