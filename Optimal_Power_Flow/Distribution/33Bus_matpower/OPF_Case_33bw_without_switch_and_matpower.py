@@ -76,13 +76,13 @@ Problem = optimizer.solve(instance, opt='knitro')
 """
 optimizer = pyo.SolverFactory('ipopt')
 optimizer.options['max_iter'] = 30000
+instance.dual = pyo.Suffix(direction=pyo.Suffix.IMPORT)
+Problem = optimizer.solve(instance, tee=True)
 
 #optimizer = pyo.SolverFactory('knitroampl',executable='C:/Program Files/Artelys/Knitro 14.2.0/knitroampl/knitroampl.exe') # Knitro solver 이용 시
+#instance.dual = pyo.Suffix(direction=pyo.Suffix.IMPORT)
+#Problem = optimizer.solve(instance,tee=True)
 
-instance.dual = pyo.Suffix(direction=pyo.Suffix.IMPORT)
-Problem = optimizer.solve(instance,tee=True)
-
-Problem = optimizer.solve(instance, tee=True)
 print('Solving OPF model...')
 
 
