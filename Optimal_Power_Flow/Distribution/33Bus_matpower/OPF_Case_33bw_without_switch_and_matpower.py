@@ -83,6 +83,25 @@ Problem = optimizer.solve(instance, tee=True)
 #instance.dual = pyo.Suffix(direction=pyo.Suffix.IMPORT)
 #Problem = optimizer.solve(instance,tee=True)
 
+'''
+in ubuntu 
+https://www.artelys.com/app/docs/knitro/1_introduction/installation/unix.html
+
+설치파일 압축해제 후 /usr/local/knitro-<ver> 에 위치
+    > gunzip knitro-|release|-platformname.tar.gz
+    > tar -xvf knitro-|release|-platformname.tar
+
+cat INSTALL 로 확인 후 license.tex 파일 두기 
+
+사용자만 사용가능
+~/.bashrc에 아래 내용 추가
+> export PATH= <file_absolute_path>:$PATH
+> export LD_LIBRARY_PATH= <file_absolute_library_path>:$LD_LIBRARY_PATH
+'''
+#optimizer = pyo.SolverFactory('knitroampl',executable='/usr/local/knitro-14.2.0/knitroampl/knitroampl')
+#instance.dual = pyo.Suffix(direction=pyo.Suffix.IMPORT)
+#Problem = optimizer.solve(instance,tee=True)
+
 print('Solving OPF model...')
 
 
