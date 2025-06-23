@@ -9,6 +9,7 @@ import pandas as pd
 import numpy as np
 import os, sys
 import pyomo.environ as pyo
+import matplotlib.pyplot as plt
 from Packages.Set_values_matpower import *
 from Packages.OPF_Creator_matpower import *
 from pyomo import environ as pym
@@ -61,9 +62,10 @@ plfs_list = []
 
 load_coefficient = [0.8, 0.9, 1.0, 1.1, 1.2]
 for i in load_coefficient:
-    Load_info[['p_mw']] = Load_info[['p_mw']] * i
-    # OPF Model Create
-    model = OPF_model_creator_without_switch(np,pyo,base_MVA,Slackbus,Bus_info,Line_info,Load_info,Gen_info)
+    current_Load_info = Load_info.copy()
+    current_Load_info[['p_mw']] = current_Load_info[['p_mw']] * i
+
+    model = OPF_model_creator_without_switch(np,pyo,base_MVA,Slackbus,Bus_info,Line_info,current_Load_info,Gen_info)
 
     # Create instance for OPF Model
     os.chdir(save_directory)
@@ -152,26 +154,30 @@ P_total_matrix = pd.DataFrame(P_total_list, index=[f"Load * {c}" for c in load_c
 D_total_matrix = pd.DataFrame(D_total_list, index=[f"Load * {c}" for c in load_coefficient], columns=["D_total"])
 bus_numbers = list(range(1, len(V_mag_list[0]) + 1))
 line_numbers = list(range(1, len(plfs_list[0]) + 1))
+from_numbers = list(Line_info['from_bus'])
+to_numbers = list(Line_info['to_bus'])
 V_mag_matrix = pd.DataFrame(
     V_mag_list,
     index=[f"Load * {c}" for c in load_coefficient],
-    columns=[f"Bus {i}" for i in bus_numbers]
+    columns=[f"{i}" for i in bus_numbers]
 )
 V_ang_matrix = pd.DataFrame(
     V_ang_list,
     index=[f"Load * {c}" for c in load_coefficient],
-    columns=[f"Bus {i}" for i in bus_numbers]
+    columns=[f"{i}" for i in bus_numbers]
 )
 plfs_matrix = pd.DataFrame(
     plfs_list,
     index=[f"Load * {c}" for c in load_coefficient],
-    columns=[f"Line {i}" for i in line_numbers ]
+    columns=[f"L{line_numbers[i]}: {from_numbers[i]}-{to_numbers[i]}" for i in range(len(line_numbers))]
 )
 
 
 def format_result(df):
     return df.map(lambda x: 0 if abs(x) < 1e-3 else round(x, 3))
 
+formatted_V_mag = format_result(V_mag_matrix)
+formatted_V_ang = format_result(V_ang_matrix)
 
 print("="*30)
 print("▶ P_total_matrix")
@@ -181,19 +187,54 @@ print("\n" + "="*30)
 print("▶ D_total_matrix")
 print(format_result(D_total_matrix))
 
-print("\n" + "="*30)
-print("▶ V_mag_matrix (Transposed)")
-print(format_result(V_mag_matrix.T))
+V_complex_matrix = formatted_V_mag.astype(str) + " ∠ " + formatted_V_ang.astype(str)
 
-print("\n" + "="*30)
-print("▶ V_ang_matrix (Transposed)")
-print(format_result(V_ang_matrix.T))
 print("="*30)
+print("▶ V_matrix (Magnitude ∠ Angle)")
+print(V_complex_matrix.T)
+V_complex_matrix.T.to_csv("V_matrix_transposed.csv")
 
+print("="*30)
 print("\n" + "="*30)
 print("▶ P_line_flow_sending(Transposed)")
 print(format_result(plfs_matrix.T))
-print("="*30)
+plfs_matrix.T.to_csv("P_line_flow_sending_transposed.csv")
+
+# 3. 그래프 그리기 (데이터프레임 전치 후)
+fig1, axes = plt.subplots(nrows=2, ncols=1, figsize=(12, 12))
+
+# --- 첫 번째 그래프: 버스별 전압 크기 ---
+# V_mag_matrix를 전치(Transpose)하여 x축이 버스, 선이 부하계수가 되도록 함
+V_mag_matrix_T = V_mag_matrix.T
+V_mag_matrix_T.plot(ax=axes[0], marker='o', linestyle='-')
+
+axes[0].set_title('V_mag (Load_coefficient)')
+axes[0].set_xlabel('Bus (Bus Number)')
+axes[0].set_ylabel('V_mag (p.u.)')
+axes[0].grid(True)
+axes[0].legend(title='Load Coefficient')
+# X축 눈금을 버스 이름으로 설정 (이미 자동으로 되지만 명시적으로 설정 가능)
+axes[0].set_xticks(range(len(V_mag_matrix_T.index)))
+axes[0].set_xticklabels(V_mag_matrix_T.index)
+
+
+# --- 두 번째 그래프: 선로별 조류 ---
+# plfs_matrix를 전치(Transpose)하여 x축이 선로, 선이 부하계수가 되도록 함
+plfs_matrix_T = plfs_matrix.T
+plfs_matrix_T.plot(ax=axes[1], marker='s', linestyle='--')
+
+axes[1].set_title('Power flow (Load_coefficient)')
+axes[1].set_xlabel('Line (Line Number)')
+axes[1].set_ylabel('P_sending (MW)')
+axes[1].grid(True)
+axes[1].legend(title='Load Coefficient')
+# X축 눈금을 선로 이름으로 설정
+axes[1].set_xticks(range(len(plfs_matrix_T.index)))
+axes[1].set_xticklabels(range(1, len(plfs_list[0]) + 1))
+
+# 그래프 레이아웃 자동 조정 및 표시
+plt.tight_layout()
+plt.show()
 
     # print('----------------------------------------------------------------')
     # branch = pd.DataFrame(previous_branch_array)
