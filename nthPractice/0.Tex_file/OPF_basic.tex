@@ -686,7 +686,7 @@
 \begin{frame}
 	\frametitle{At glance...}
 	
-	Functions or expressions(Continued): Eq.~\eqref{eq:expr_q_flow_ij}, \eqref{eq:expr_i_re}, \eqref{eq:expr_i_imag}
+	Functions or expressions(Continued): Eq.~\eqref{eq:expr_q_flow_ij}, \eqref{eq:expr_q_flow_ji}, \eqref{eq:expr_i_re}, \eqref{eq:expr_i_imag}
 	
 	\begin{align*}
 		\begin{split}
@@ -694,6 +694,21 @@
 			&- B_{ij}\left\lvert \dot{V}_{i}\right\rvert\left\lvert \dot{V}_{j}\right\rvert \cos{\left(\theta_{i}-\theta_{j}\right)}  \quad   \forall l \in \Omega_{l} \quad \text{or} \quad \forall (ij) \in \Omega_{l}
 		\end{split}
 	\end{align*}
+
+	\begin{align*}
+		\begin{split}
+			Q_{ji} =&\ B_{ij}\left\lvert \dot{V}_{j}\right\rvert^{2} - G_{ij}\left\lvert \dot{V}_{i}\right\rvert\left\lvert \dot{V}_{j}\right\rvert \sin{\left(\theta_{i}-\theta_{j}\right)} \\
+			&- B_{ij}\left\lvert \dot{V}_{i}\right\rvert\left\lvert \dot{V}_{j}\right\rvert \cos{\left(\theta_{i}-\theta_{j}\right)}  \quad   \forall l \in \Omega_{l} \quad \text{or} \quad \forall (ij) \in \Omega_{l}
+		\end{split}
+	\end{align*}
+
+
+\end{frame}
+
+%------------------------------------------------
+
+\begin{frame}
+	\frametitle{At glance...}	
 	
 	\begin{align*}
 		\begin{split}
@@ -834,11 +849,28 @@
 	\label{eq:cons_load_bal_Q}
 		Q_{G_{i}} - Q_{D_{i}} = \sum_{j \in \Omega_{b_{i}}}(Q_{ij})  \quad \forall i \in \Omega_{b}
 	\end{align}
+	
+\end{frame}
+
+%------------------------------------------------
+
+\begin{frame}
+	\frametitle{Constraints}
+	\framesubtitle{Load balance} % Optional subtitle
+
 
 	\begin{align}
 	\label{eq:expr_q_flow_ij}
 		\begin{split}
 			Q_{ij}=&B_{ij}\left\lvert \dot{V}_{i}\right\rvert^{2} + G_{ij}\left\lvert \dot{V}_{i}\right\rvert\left\lvert \dot{V}_{j}\right\rvert \sin{\left(\theta_{i}-\theta_{j}\right)} \\
+			&- B_{ij}\left\lvert \dot{V}_{i}\right\rvert\left\lvert \dot{V}_{j}\right\rvert \cos{\left(\theta_{i}-\theta_{j}\right)}  \quad   \forall l \in \Omega_{l} \quad \text{or} \quad \forall (ij) \in \Omega_{l}
+		\end{split}
+	\end{align}
+
+	\begin{align}
+	\label{eq:expr_q_flow_ji}
+		\begin{split}
+			Q_{ji} =&\ B_{ij}\left\lvert \dot{V}_{j}\right\rvert^{2} - G_{ij}\left\lvert \dot{V}_{i}\right\rvert\left\lvert \dot{V}_{j}\right\rvert \sin{\left(\theta_{i}-\theta_{j}\right)} \\
 			&- B_{ij}\left\lvert \dot{V}_{i}\right\rvert\left\lvert \dot{V}_{j}\right\rvert \cos{\left(\theta_{i}-\theta_{j}\right)}  \quad   \forall l \in \Omega_{l} \quad \text{or} \quad \forall (ij) \in \Omega_{l}
 		\end{split}
 	\end{align}
@@ -869,13 +901,13 @@
 
 	\begin{align}
 	\label{eq:cons_slack}
-		\theta_{i} = \left\{ \begin{array}{cl}
-							0 & : \ \text{Bus } i \text{ is slack,} \\
-							\text{free} & : \ \text{Otherwise.}
-							\end{array} \right.\\
+		\theta_{i} =
+		\begin{cases}
+			0 & \text{if bus $i$ is slack,} \\
+			\text{free} & \text{otherwise.}
+		\end{cases}
 	\end{align}
 
-	
 \end{frame}
 
 %------------------------------------------------
@@ -937,6 +969,468 @@
 	\end{align*}
 
 	
+\end{frame}
+
+%------------------------------------------------
+\section{Multi-Period Optimal Power Flow Formulation}
+
+\begin{frame}[plain] % The optional argument 'plain' hides the headline and footline
+	\begin{center}
+		{\Huge Multi-Period Optimal Power Flow \\ (MPOPF) \\  Formulation}
+		
+		\bigskip\bigskip % Vertical whitespace
+		
+	\end{center}
+\end{frame}
+
+%------------------------------------------------
+
+\subsection{Multi-Period Overview}
+
+\begin{frame}
+	\frametitle{Multi-Period Overview}
+	
+	\begin{columns}
+		\begin{column}{0.5\textwidth}
+			\begin{itemize}
+				\item MPOPF Nomenclature: Slide~\ref{frame:MPOFP_nomenclature}
+				\item MPOPF At glance...: Slide~\ref{frame:MPOFP_atglance}
+				\item MPOPF Objective function: Slide~\ref{frame:MPOFP_objfunc}
+				\item MPOPF Constraints and expressions: Slide~\ref{frame:MPOFP_constraints}
+					\begin{itemize}
+						\item MPOFP Load balance
+						\item MPOFP Power and voltage
+						\item MPOFP Current
+					\end{itemize}
+			\end{itemize}
+		\end{column}
+
+		\begin{column}{0.5\textwidth}
+			Optimization problem is formulated as:
+			\begin{enumerate}
+				\item MPOPF Objective function:
+				\[
+					\text{minimize (or maximize) } f(\mathbf{x})
+				\]
+				\item MPOPF Constraints:
+				\[
+					g(\mathbf{x}) \leq 0, \quad h(\mathbf{x}) = 0
+				\]
+				\item MPOPF Functions in the objective and constraints:
+				\[
+					f(\mathbf{x}), \quad g(\mathbf{x}), \quad h(\mathbf{x})
+				\]
+			\end{enumerate}
+		\end{column}
+	\end{columns}
+\end{frame}
+
+%------------------------------------------------
+
+\subsection{MPOFP Nomenclature}
+
+\begin{frame}
+
+	\frametitle{MPOFP Nomenclature}
+	\label{frame:MPOFP_nomenclature}
+	\framesubtitle{Sets, indices, parameters}
+	
+	\begin{columns}
+	
+		\begin{column}{0.5\textwidth}
+			
+			\begin{itemize}
+			\item Indices
+			\end{itemize}
+
+			\begin{tabular}{ll}
+				$i,j$ & Index of bus \\
+				$l$ & Index of line \\
+				$t$ & Index of time \\
+			\end{tabular}
+
+		\end{column}
+
+		\begin{column}{0.5\textwidth}
+			
+			\begin{itemize}
+			\item Sets
+			\end{itemize}
+
+			\begin{tabular}{ll}
+				$\Omega_{l}$ & Set of lines \\
+				$\Omega_{b}$ & Set of buses\\
+				$\Omega_{b_{i}}$ & \begin{tabular}[l]{@{}l@{}}Set of connected buses \\ in the bus $i$\end{tabular}\\
+				$\Omega_{b_{g}}$ & \begin{tabular}[l]{@{}l@{}}Set of generation buses \\ ($\Omega_{b_{g}}$ $\subset$ $\Omega_{b}$)\end{tabular}\\
+				$T$ & \begin{tabular}[l]{@{}l@{}}The total time period\\ (e.g 1,2...,24 for 24 hours)\end{tabular}\\
+			\end{tabular}
+
+		\end{column}
+
+
+	\end{columns}
+
+\end{frame}
+
+%------------------------------------------------
+
+\begin{frame}
+	\frametitle{MPOFP Nomenclature}
+	\framesubtitle{Sets, indices, parameters}
+
+	\begin{columns}
+		\begin{column}{0.5\textwidth}
+			\begin{itemize}
+			\item Parameters or constants
+			\end{itemize}
+
+			\begin{tabular}{ll}
+				$Z_{ij}$, $Y_{ij}$ & \begin{tabular}[l]{@{}l@{}}Impedance and \\admittance of line $ij$\\(from bus $i$ to bus $j$)\end{tabular} \\
+				$G_{ij}$, $B_{ij}$ & \begin{tabular}[l]{@{}l@{}}Conductance and \\susceptance of line $ij$\\(from bus $i$ to bus $j$)\end{tabular} \\
+				$\overline{V}$, $\underline{V}$ & \begin{tabular}[l]{@{}l@{}}Maximum and minimum \\voltage magnitude\end{tabular}\\
+				$\overline{I}_{ij}$ & \begin{tabular}[l]{@{}l@{}}Maximum current \\ flow limit of line $ij$\end{tabular}\\
+			\end{tabular}
+		\end{column}
+
+		\begin{column}{0.5\textwidth}
+			\begin{tabular}{ll}
+				$P_{D_{i}}$, $Q_{D_{i}}$ & \begin{tabular}[l]{@{}l@{}}Active and reactive \\ power demand at bus $i$\end{tabular}\\
+				$\overline{P}_{G_{i}}$, $\underline{P}_{G_{i}}$ & \begin{tabular}[l]{@{}l@{}}Maximum and minimum \\active power from generator \\ at bus $i$\end{tabular}\\
+				$\overline{Q}_{G_{i}}$, $\underline{Q}_{G_{i}}$ & \begin{tabular}[l]{@{}l@{}}Maximum and minimum \\reactive power from \\ generator at bus $i$\end{tabular}\\
+				$baseMVA$ & Value of base MVA \\
+			\end{tabular}
+		\end{column}
+	\end{columns}
+
+\end{frame}
+
+%------------------------------------------------
+
+\begin{frame}
+	\frametitle{MPOFP Nomenclature}
+	\framesubtitle{Sets, indices, parameters}
+
+	\begin{columns}
+		\begin{column}{0.5\textwidth}
+			\begin{itemize}
+			\item Functions
+			\end{itemize}
+
+			\begin{tabular}{ll}
+				$P_{ij}(t)$, $Q_{ij}(t)$& \begin{tabular}[l]{@{}l@{}}Active and reactive power \\ flow of line $ij$ at time $t$\end{tabular}\\
+				$I_{r_{ij}}(t)$, $I_{Im_{ij}}(t)$& \begin{tabular}[l]{@{}l@{}}Real and Imaginary current \\ flow of line $ij$ at time $t$\end{tabular}\\
+				$P^{lineloss}_{l}(t)$& \begin{tabular}[l]{@{}l@{}}Active line loss of line $l(ij)$ \\ at time $t$\end{tabular}\\
+			\end{tabular}
+		\end{column}
+
+		\begin{column}{0.5\textwidth}
+			\begin{itemize}
+			\item Varaibles
+			\end{itemize}
+
+			\begin{tabular}{ll}
+				$\left|\dot{V}_{i}(t) \right|$ & \begin{tabular}[l]{@{}l@{}} Voltage magnitude in bus $i$ \\ at time $t$ \\ \end{tabular}\\
+				$\theta_{i}(t)$ & \begin{tabular}[l]{@{}l@{}}Voltage phase angle in bus $i$ \\ at time $t$ \\ \end{tabular}\\
+				$P_{G_{i}}$, $Q_{G_{i}}$ & \begin{tabular}[l]{@{}l@{}}Active and reactive power \\from generator at bus $i$ \\ at time $t$ \end{tabular}\\
+			\end{tabular}
+
+
+		\end{column}
+
+	\end{columns}
+
+
+\end{frame}
+
+%------------------------------------------------
+
+\subsection{MPOPF At glance...}
+
+\begin{frame}
+	\frametitle{MPOPF At glance...}
+	\label{frame:MPOFP_atglance}
+	
+	Objective function: Eq.~\eqref{eq:Mobj}
+	\begin{align*}
+		\min{ \sum_{t} \sum_{\forall i,j} {[-G_{ij}(\left|\dot{V}_{i}(t) \right|^2 + \left|\dot{V}_{j}(t) \right|^2) + 2G_{ij}\left|\dot{V}_{i}(t) \right|\left|\dot{V}_{j}(t) \right|\cos\left(\theta_{i}(t)-\theta_{j}(t) \right) ]} }
+	\end{align*}
+
+	Constraints: Eqs.~\eqref{eq:Mcons_load_bal_P},\eqref{eq:Mcons_load_bal_Q},\eqref{eq:Mcons_power_P},\eqref{eq:Mcons_power_Q},\eqref{eq:Mcons_voltage},\eqref{eq:Mcons_slack},\eqref{eq:Mcons_current}
+	\vspace{-1.2em}
+	\begin{columns}
+		\begin{column}{0.5\textwidth}
+			\begin{align*}
+				s.t. \quad \\
+				P_{G_{i}}(t) - P_{D_{i}}(t) = \sum_{j \in \Omega_{b_{i}}}(P_{ij}(t))  \quad \forall i \in \Omega_{b},\ \forall t \in T\\
+				Q_{G_{i}}(t) - Q_{D_{i}}(t) = \sum_{j \in \Omega_{b_{i}}}(Q_{ij}(t))  \quad \forall i \in \Omega_{b},\ \forall t \in T\\
+				\underline{P}_{G_{i}} \leq P_{G_{i}}(t) \leq \overline{P}_{G_{i}} \quad \forall i \in \Omega_{b},\ \forall t \in T\\
+				\underline{Q}_{G_{i}} \leq Q_{G_{i}}(t) \leq \overline{Q}_{G_{i}}  \quad \forall i \in \Omega_{b},\ \forall t \in T\\
+			\end{align*}
+		\end{column}
+
+		\begin{column}{0.5\textwidth}
+			\begin{align*}
+				\underline{V} \leq \left|\dot{V}_{i}(t) \right| \leq \overline{V}  \quad \forall i \in \Omega_{b},\ \forall t \in T\\
+				\theta_{i}(t) = \left\{ \begin{array}{cl}
+							0 & : \ \text{Bus } i \text{ is slack,} \\
+							\text{free} & : \ \text{Otherwise.}
+							\end{array} \right.\\
+				I_{r_{ij}}(t)^{2}+ I_{Im_{ij}}(t)^{2} \leq \overline{I}_{ij}^{2} \quad   \forall l(ij) \in \Omega_{l},\ \forall t \in T\\
+			\end{align*}
+		\end{column}
+	\end{columns}
+	
+\end{frame}
+
+%------------------------------------------------
+
+\begin{frame}
+	\frametitle{MPOPF At glance...}
+
+	Functions or expressions: Eq.~\eqref{eq:Mexpr_loss}, \eqref{eq:Mexpr_p_flow_ij}, \eqref{eq:Mexpr_p_flow_ji}
+
+	\begin{gather*}
+		[-G_{ij}(\left|\dot{V}_{i}(t) \right|^2 + \left|\dot{V}_{j}(t) \right|^2) + 2G_{ij}\left|\dot{V}_{i}(t) \right|\left|\dot{V}_{j}(t) \right|\cos\left(\theta_{i}(t)-\theta_{j}(t) \right) ] \\
+		= P_{l}^{line loss} = P_{ij} + P_{ji} \\[1em]
+		\forall l(ij) \in \Omega_{l},\ \forall t \in T
+	\end{gather*}
+
+	
+\end{frame}
+
+%------------------------------------------------
+
+\begin{frame}
+	\frametitle{MPOPF At glance...}
+
+	\begin{align*}
+		\begin{split}
+		P_{ij}(t) = &-G_{ij} \left|\dot{V}_{i}(t) \right| \left|\dot{V}_{i}(t) \right| 
+		+ G_{ij} \left|\dot{V}_{i}(t) \right| \left|\dot{V}_{j}(t) \right| \cos\left(\theta_{i}(t)-\theta_{j}(t) \right) \\
+		&+ B_{ij} \left|\dot{V}_{i}(t) \right| \left|\dot{V}_{j}(t) \right| \sin\left(\theta_{i}(t)-\theta_{j}(t) \right) 
+		\end{split}
+	\end{align*}
+
+	\begin{align*}
+		\begin{split}
+		P_{ji}(t)=&-G_{ij} \left|\dot{V}_{j}(t) \right| \left|\dot{V}_{j}(t) \right| 
+		+ G_{ij} \left|\dot{V}_{i}(t) \right| \left|\dot{V}_{j}(t) \right| \cos\left(\theta_{i}(t)-\theta_{j}(t) \right)\\
+		&- B_{ij} \left|\dot{V}_{i}(t) \right| \left|\dot{V}_{j}(t) \right| \sin\left(\theta_{i}(t)-\theta_{j}(t) \right)
+		\end{split}
+	\end{align*}
+
+	\begin{align*}
+		\begin{split}
+		\quad \quad \forall l \in \Omega_{l} \quad \text{or} \quad \forall (ij) \in \Omega_{l} \quad \text{and} \quad \forall t \in T
+		\end{split}
+	\end{align*}
+
+	
+\end{frame}
+
+%------------------------------------------------
+\begin{frame}
+    \frametitle{MPOPF At Glance}
+    
+    Functions or expressions (Continued): Eq.~\eqref{eq:Mexpr_q_flow_ij},\eqref{eq:Mexpr_q_flow_ji}, \eqref{eq:Mexpr_i_re}, \eqref{eq:Mexpr_i_imag}
+    
+    \begin{align*}
+        \begin{split}
+            Q_{ij}(t) =&\ B_{ij}\left\lvert \dot{V}_{i}(t)\right\rvert^{2} + G_{ij}\left\lvert \dot{V}_{i}(t)\right\rvert\left\lvert \dot{V}_{j}(t)\right\rvert \sin{\left(\theta_{i}(t)-\theta_{j}(t)\right)} \\
+            &- B_{ij}\left\lvert \dot{V}_{i}(t)\right\rvert\left\lvert \dot{V}_{j}(t)\right\rvert \cos{\left(\theta_{i}(t)-\theta_{j}(t)\right)}  \\
+            &\qquad \forall l \in \Omega_{l} \ \text{or} \ \forall (ij) \in \Omega_{l},\ \forall t \in T
+        \end{split}
+    \end{align*}
+
+	\begin{align*}
+		\begin{split}
+			Q_{ji}(t) =&\ B_{ij}\left\lvert \dot{V}_{j}(t)\right\rvert^{2} - G_{ij}\left\lvert \dot{V}_{i}(t)\right\rvert\left\lvert \dot{V}_{j}(t)\right\rvert \sin{\left(\theta_{i}(t)-\theta_{j}(t)\right)} \\
+			&- B_{ij}\left\lvert \dot{V}_{i}(t)\right\rvert\left\lvert \dot{V}_{j}(t)\right\rvert \cos{\left(\theta_{i}(t)-\theta_{j}(t)\right)}  \\
+			&\qquad \forall l \in \Omega_{l} \ \text{or} \ \forall (ij) \in \Omega_{l},\ \forall t \in T
+		\end{split}
+	\end{align*}
+    
+
+\end{frame}
+
+
+%------------------------------------------------
+
+\begin{frame}
+    \frametitle{MPOPF At Glance}
+    
+    \begin{align*}
+        \begin{split}
+            I_{r_{ij}}(t) = &-G_{ij}\left\lvert \dot{V}_{i}(t) \right\rvert \cos{\theta_{i}(t)} + B_{ij}\left\lvert \dot{V}_{i}(t) \right\rvert \sin{\theta_{i}(t)} \\
+                    &+ G_{ij}\left\lvert \dot{V}_{j}(t) \right\rvert \cos{\theta_{j}(t)} - B_{ij}\left\lvert \dot{V}_{j}(t) \right\rvert \sin{\theta_{j}(t)} \\
+            &\qquad \forall l \in \Omega_{l} \ \text{or} \ \forall (ij) \in \Omega_{l},\ \forall t \in T
+        \end{split}
+    \end{align*}
+
+    \begin{align*}
+        \begin{split}
+            I_{Im_{ij}}(t) = &-B_{ij}\left\lvert \dot{V}_{i}(t) \right\rvert \cos{\theta_{i}(t)} - G_{ij}\left\lvert \dot{V}_{i}(t) \right\rvert \sin{\theta_{i}(t)} \\
+            &+ B_{ij}\left\lvert \dot{V}_{j}(t) \right\rvert \cos{\theta_{j}(t)} + G_{ij}\left\lvert \dot{V}_{j}(t) \right\rvert \sin{\theta_{j}(t)} \\
+            &\qquad \forall l \in \Omega_{l} \ \text{or} \ \forall (ij) \in \Omega_{l},\ \forall t \in T
+        \end{split}
+    \end{align*}
+
+\end{frame}
+%------------------------------------------------
+
+\subsection{MPOPF Objective function}
+
+\begin{frame}
+    \frametitle{MPOPF Objective function}
+    \label{frame:MPOFP_objfunc}
+    \begin{align}
+    \label{eq:Mobj}
+        \min \sum_{t \in T} \sum_{\forall i,j} \Big[ -G_{ij}\big(\left|\dot{V}_{i}(t)\right|^2 + \left|\dot{V}_{j}(t)\right|^2\big) + 2G_{ij}\left|\dot{V}_{i}(t)\right|\left|\dot{V}_{j}(t)\right|\cos\big(\theta_{i}(t)-\theta_{j}(t)\big) \Big]
+    \end{align}
+
+    \begin{align}
+    \label{eq:Mexpr_loss}
+        &\Big[ -G_{ij}\big(\left|\dot{V}_{i}(t)\right|^2 + \left|\dot{V}_{j}(t)\right|^2\big) + 2G_{ij}\left|\dot{V}_{i}(t)\right|\left|\dot{V}_{j}(t)\right|\cos\big(\theta_{i}(t)-\theta_{j}(t)\big) \Big] \notag \\
+        &\qquad = P_{l}^{line loss}(t) = P_{ij}(t) + P_{ji}(t) \qquad \forall l(ij) \in \Omega_{l},\ \forall t \in T
+    \end{align}
+
+\end{frame}
+
+%------------------------------------------------
+
+\begin{frame}
+    \frametitle{MPOPF Objective function}
+
+    \begin{align}
+    \label{eq:Mexpr_p_flow_ij}
+        \begin{split}
+        P_{ij}(t) =\ &-G_{ij} \left|\dot{V}_{i}(t)\right|^2 
+        + G_{ij} \left|\dot{V}_{i}(t)\right|\left|\dot{V}_{j}(t)\right| \cos\big(\theta_{i}(t)-\theta_{j}(t)\big) \\
+        &+ B_{ij} \left|\dot{V}_{i}(t)\right|\left|\dot{V}_{j}(t)\right| \sin\big(\theta_{i}(t)-\theta_{j}(t)\big) \\[1em]
+        &\qquad \forall l \in \Omega_{l} \ \text{or} \ \forall (ij) \in \Omega_{l},\ \forall t \in T
+        \end{split}
+    \end{align}
+
+    \begin{align}
+    \label{eq:Mexpr_p_flow_ji}
+        \begin{split}
+        P_{ji}(t) =\ &-G_{ij} \left|\dot{V}_{j}(t)\right|^2 
+        + G_{ij} \left|\dot{V}_{i}(t)\right|\left|\dot{V}_{j}(t)\right| \cos\big(\theta_{i}(t)-\theta_{j}(t)\big) \\
+        &- B_{ij} \left|\dot{V}_{i}(t)\right|\left|\dot{V}_{j}(t)\right| \sin\big(\theta_{i}(t)-\theta_{j}(t)\big) \\[1em]
+        &\qquad \forall l \in \Omega_{l} \ \text{or} \ \forall (ij) \in \Omega_{l},\ \forall t \in T
+        \end{split}
+    \end{align}
+
+\end{frame}
+
+%------------------------------------------------
+
+\subsection{Constraints}
+
+\begin{frame}
+    \frametitle{MPOPF Constraints}
+    \label{frame:MPOFP_constraints}
+    \framesubtitle{Load balance} % Optional subtitle
+
+    \begin{align}
+    \label{eq:Mcons_load_bal_P}
+        P_{G_{i}}(t) - P_{D_{i}}(t) = \sum_{j \in \Omega_{b_{i}}} P_{ij}(t)  \quad \forall i \in \Omega_{b},\ \forall t \in T
+    \end{align}
+
+    \begin{align}
+    \label{eq:Mcons_load_bal_Q}
+        Q_{G_{i}}(t) - Q_{D_{i}}(t) = \sum_{j \in \Omega_{b_{i}}} Q_{ij}(t)  \quad \forall i \in \Omega_{b},\ \forall t \in T
+    \end{align}
+
+\end{frame}
+
+%------------------------------------------------
+
+
+\begin{frame}
+    \frametitle{MPOPF Constraints}
+    \framesubtitle{Load balance} % Optional subtitle
+
+    \begin{align}
+    \label{eq:Mexpr_q_flow_ij}
+        \begin{split}
+            Q_{ij}(t) =\ &B_{ij}\left\lvert \dot{V}_{i}(t)\right\rvert^{2} + G_{ij}\left\lvert \dot{V}_{i}(t)\right\rvert\left\lvert \dot{V}_{j}(t)\right\rvert \sin{\left(\theta_{i}(t)-\theta_{j}(t)\right)} \\
+            &- B_{ij}\left\lvert \dot{V}_{i}(t)\right\rvert\left\lvert \dot{V}_{j}(t)\right\rvert \cos{\left(\theta_{i}(t)-\theta_{j}(t)\right)} \\[1em]
+            &\qquad \forall l \in \Omega_{l} \ \text{or} \ \forall (ij) \in \Omega_{l},\ \forall t \in T
+        \end{split}
+    \end{align}
+
+	\begin{align}
+    \label{eq:Mexpr_q_flow_ji}
+        \begin{split}
+            Q_{ji}(t) =\ &B_{ij}\left\lvert \dot{V}_{j}(t)\right\rvert^{2} - G_{ij}\left\lvert \dot{V}_{i}(t)\right\rvert\left\lvert \dot{V}_{j}(t)\right\rvert \sin{\left(\theta_{i}(t)-\theta_{j}(t)\right)} \\
+            &- B_{ij}\left\lvert \dot{V}_{i}(t)\right\rvert\left\lvert \dot{V}_{j}(t)\right\rvert \cos{\left(\theta_{i}(t)-\theta_{j}(t)\right)} \\[1em]
+            &\qquad \forall l \in \Omega_{l} \ \text{or} \ \forall (ij) \in \Omega_{l},\ \forall t \in T
+        \end{split}
+\end{align}
+
+\end{frame}
+
+%------------------------------------------------
+
+\begin{frame}
+    \frametitle{MPOPF Constraints}
+    \framesubtitle{Power and voltage} % Optional subtitle
+
+    \begin{align}
+    \label{eq:Mcons_power_P}
+        \underline{P}_{G_{i}} \leq P_{G_{i}}(t) \leq \overline{P}_{G_{i}}  \quad \forall i \in \Omega_{b},\ \forall t \in T
+    \end{align}
+
+    \begin{align}
+    \label{eq:Mcons_power_Q}
+        \underline{Q}_{G_{i}} \leq Q_{G_{i}}(t) \leq \overline{Q}_{G_{i}}  \quad \forall i \in \Omega_{b},\ \forall t \in T
+    \end{align}
+
+    \begin{align}
+    \label{eq:Mcons_voltage}
+        \underline{V} \leq \left|\dot{V}_{i}(t) \right| \leq \overline{V}  \quad \forall i \in \Omega_{b},\ \forall t \in T
+    \end{align}
+
+    \begin{align}
+    \label{eq:Mcons_slack}
+        \theta_{i}(t) = \left\{ \begin{array}{cl}
+                            0 & : \ \text{Bus } i \text{ is slack,} \\
+                            \text{free} & : \ \text{Otherwise.}
+                            \end{array} \right. \quad \forall t \in T
+    \end{align}
+
+\end{frame}
+
+%------------------------------------------------
+
+\begin{frame}
+    \frametitle{MPOPF Constraints}
+    \framesubtitle{Current} % Optional subtitle
+
+    \begin{align}
+    \label{eq:Mcons_current}
+        I_{r_{ij}}(t)^{2}+ I_{Im_{ij}}(t)^{2} \leq \overline{I}_{ij}^{2} \quad   \forall l \in \Omega_{l} \ \text{or} \ \forall (ij) \in \Omega_{l},\ \forall t \in T
+    \end{align}
+
+    \begin{align}
+    \label{eq:Mexpr_i_re}
+        \begin{split}
+            I_{r_{ij}}(t) =\ &-G_{ij}\left\lvert \dot{V}_{i}(t) \right\rvert \cos{\theta_{i}(t)} + B_{ij}\left\lvert \dot{V}_{i}(t) \right\rvert \sin{\theta_{i}(t)} \\
+                    &+ G_{ij}\left\lvert \dot{V}_{j}(t) \right\rvert \cos{\theta_{j}(t)} - B_{ij}\left\lvert \dot{V}_{j}(t) \right\rvert \sin{\theta_{j}(t)} \\
+            &\qquad \forall l \in \Omega_{l} \ \text{or} \ \forall (ij) \in \Omega_{l},\ \forall t \in T
+        \end{split}
+    \end{align}
+
+    \begin{align}
+    \label{eq:Mexpr_i_imag}
+        \begin{split}
+            I_{Im_{ij}}(t) =\ &-B_{ij}\left\lvert \dot{V}_{i}(t) \right\rvert \cos{\theta_{i}(t)} - G_{ij}\left\lvert \dot{V}_{i}(t) \right\rvert \sin{\theta_{i}(t)} \\
+            &+ B_{ij}\left\lvert \dot{V}_{j}(t) \right\rvert \cos{\theta_{j}(t)} + G_{ij}\left\lvert \dot{V}_{j}(t) \right\rvert \sin{\theta_{j}(t)} \\
+            &\qquad \forall l \in \Omega_{l} \ \text{or} \ \forall (ij) \in \Omega_{l},\ \forall t \in T
+        \end{split}
+    \end{align}
+
 \end{frame}
 
 %------------------------------------------------
