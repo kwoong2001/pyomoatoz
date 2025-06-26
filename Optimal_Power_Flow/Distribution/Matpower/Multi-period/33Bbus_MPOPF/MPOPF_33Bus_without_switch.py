@@ -66,17 +66,6 @@ os.chdir(os.path.dirname(__file__))
 
 print('Initializing OPF model...')
 
-"""
-NEOS 기반 Solver 활용 - 가입 필요 (무료)
-https://neos-server.org/neos/
-- 제한은 있지만 사용하는 것을 추천, IPOPT나 GLPK는 무료이지만 안정적인 활용에 어려움이 많음
-
-# formulate optimization model with NEOS
-os.environ['NEOS_EMAIL'] = ''
-optimizer = pyo.SolverManagerFactory('neos')
-Problem = optimizer.solve(instance, opt='knitro')
-
-"""
 optimizer = pyo.SolverFactory('ipopt')
 optimizer.options['max_iter'] = 30000
 instance.dual = pyo.Suffix(direction=pyo.Suffix.IMPORT)
