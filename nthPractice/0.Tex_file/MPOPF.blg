@@ -1,9 +1,0 @@
-[0] Config.pm:308> INFO - This is Biber 2.20
-[0] Config.pm:311> INFO - Logfile is 'MPOPF.blg'
-[132] biber-MSWIN64:340> INFO - === 
-[187] Biber.pm:420> INFO - Reading 'MPOPF.bcf'
-[311] Biber.pm:994> INFO - Found 0 citekeys in bib section 0
-[326] bbl.pm:676> INFO - Writing 'MPOPF.bbl' with encoding 'UTF-8'
-[326] bbl.pm:779> INFO - Output to MPOPF.bbl
-[327] Biber.pm:131> WARN - The file 'MPOPF.bcf' does not contain any citations!
-[327] Biber.pm:133> INFO - WARNINGS: 1

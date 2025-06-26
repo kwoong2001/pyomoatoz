@@ -150,9 +150,9 @@
 				\item MPOPF Objective function: Slide~\ref{frame:MPOFP_objfunc}
 				\item MPOPF Constraints and expressions: Slide~\ref{frame:MPOFP_constraints}
 					\begin{itemize}
-						\item MPOFP Load balance
-						\item MPOFP Power and voltage
-						\item MPOFP Current
+						\item MPOPF Load balance
+						\item MPOPF Power and voltage
+						\item MPOPF Current
 					\end{itemize}
 			\end{itemize}
 		\end{column}
@@ -179,11 +179,11 @@
 
 %------------------------------------------------
 
-\subsection{MPOFP Nomenclature}
+\subsection{Nomenclature}
 
 \begin{frame}
 
-	\frametitle{MPOFP Nomenclature}
+	\frametitle{Nomenclature}
 	\label{frame:MPOFP_nomenclature}
 	\framesubtitle{Sets, indices, parameters}
 	
@@ -227,7 +227,7 @@
 %------------------------------------------------
 
 \begin{frame}
-	\frametitle{MPOFP Nomenclature}
+	\frametitle{Nomenclature}
 	\framesubtitle{Sets, indices, parameters}
 
 	\begin{columns}
@@ -259,7 +259,7 @@
 %------------------------------------------------
 
 \begin{frame}
-	\frametitle{MPOFP Nomenclature}
+	\frametitle{Nomenclature}
 	\framesubtitle{Sets, indices, parameters}
 
 	\begin{columns}
@@ -283,7 +283,7 @@
 			\begin{tabular}{ll}
 				$\left|\dot{V}_{i,t} \right|$ & \begin{tabular}[l]{@{}l@{}} Voltage magnitude in bus $i$ \\ at time $t$ \\ \end{tabular}\\
 				$\theta_{i,t}$ & \begin{tabular}[l]{@{}l@{}}Voltage phase angle in bus $i$ \\ at time $t$ \\ \end{tabular}\\
-				$P_{G_{i,t}}$, $Q_{G_{i,t}}$ & \begin{tabular}[l]{@{}l@{}}Active and reactive power \\from generator at bus $i$ \\ at time $t$ \end{tabular}\\
+				$P_{G_{i},t}$, $Q_{G_{i},t}$ & \begin{tabular}[l]{@{}l@{}}Active and reactive power \\from generator at bus $i$ \\ at time $t$ \end{tabular}\\
 			\end{tabular}
 
 		\end{column}
@@ -302,19 +302,19 @@
 	
 	Objective function: Eq.~\eqref{eq:Mobj}
 	\begin{align*}
-		\min{ \sum_{t} \sum_{\forall i,j} {[-G_{ij}(\left|\dot{V}_{i,t} \right|^2 + \left|\dot{V}_{j,t} \right|^2) + 2G_{ij}\left|\dot{V}_{i,t} \right|\left|\dot{V}_{j,t} \right|\cos\left(\theta_{i,t}-\theta_{j,t} \right) ]} }
+		\min{ \sum_{\forall t} \sum_{\forall i,j} {[-G_{ij}(\left|\dot{V}_{i,t} \right|^2 + \left|\dot{V}_{j,t} \right|^2) + 2G_{ij}\left|\dot{V}_{i,t} \right|\left|\dot{V}_{j,t} \right|\cos\left(\theta_{i,t}-\theta_{j,t} \right) ]} }
 	\end{align*}
 
 	Constraints: Eqs.~\eqref{eq:Mcons_load_bal_P},\eqref{eq:Mcons_load_bal_Q},\eqref{eq:Mcons_power_P},\eqref{eq:Mcons_power_Q},\eqref{eq:Mcons_voltage},\eqref{eq:Mcons_slack},\eqref{eq:Mcons_current}
+
 	\vspace{-1.2em}
 	\begin{columns}
 		\begin{column}{0.5\textwidth}
 			\begin{align*}
-				s.t. \quad \\
-				P_{G_{i,t}} - P_{D_{i,t}} = \sum_{j \in \Omega_{b_{i}}}(P_{ij,t})  \quad \forall i \in \Omega_{b},\ \forall t \in T\\
-				Q_{G_{i,t}} - Q_{D_{i,t}} = \sum_{j \in \Omega_{b_{i}}}(Q_{ij,t})  \quad \forall i \in \Omega_{b},\ \forall t \in T\\
-				\underline{P}_{G_{i}} \leq P_{G_{i,t}} \leq \overline{P}_{G_{i}} \quad \forall i \in \Omega_{b},\ \forall t \in T\\
-				\underline{Q}_{G_{i}} \leq Q_{G_{i,t}} \leq \overline{Q}_{G_{i}}  \quad \forall i \in \Omega_{b},\ \forall t \in T\\
+				P_{G_{i},t} - P_{D_{i},t} = \sum_{j \in \Omega_{b_{i}}}(P_{ij,t})  \quad \forall i \in \Omega_{b},\ \forall t \in T\\
+				Q_{G_{i},t} - Q_{D_{i},t} = \sum_{j \in \Omega_{b_{i}}}(Q_{ij,t})  \quad \forall i \in \Omega_{b},\ \forall t \in T\\
+				\underline{P}_{G_{i}} \leq P_{G_{i},t} \leq \overline{P}_{G_{i}} \quad \forall i \in \Omega_{b},\ \forall t \in T\\
+				\underline{Q}_{G_{i}} \leq Q_{G_{i},t} \leq \overline{Q}_{G_{i}}  \quad \forall i \in \Omega_{b},\ \forall t \in T\\
 			\end{align*}
 		\end{column}
 
@@ -428,14 +428,14 @@
 \end{frame}
 %------------------------------------------------
 
-\subsection{MPOPF Objective function}
+\subsection{Objective function}
 
 \begin{frame}
-	\frametitle{MPOPF Objective function}
+	\frametitle{Objective function}
 	\label{frame:MPOFP_objfunc}
 	\begin{align}
 	\label{eq:Mobj}
-		\min \sum_{t \in T} \sum_{\forall i,j} \Big[ -G_{ij}\big(\left|\dot{V}_{i,t}\right|^2 + \left|\dot{V}_{j,t}\right|^2\big) + 2G_{ij}\left|\dot{V}_{i,t}\right|\left|\dot{V}_{j,t}\right|\cos\big(\theta_{i,t}-\theta_{j,t}\big) \Big]
+		\min \sum_{\forall t} \sum_{\forall i,j} \Big[ -G_{ij}\big(\left|\dot{V}_{i,t}\right|^2 + \left|\dot{V}_{j,t}\right|^2\big) + 2G_{ij}\left|\dot{V}_{i,t}\right|\left|\dot{V}_{j,t}\right|\cos\big(\theta_{i,t}-\theta_{j,t}\big) \Big]
 	\end{align}
 
 	\begin{align}
@@ -484,12 +484,12 @@
 
 	\begin{align}
 	\label{eq:Mcons_load_bal_P}
-		P_{G_{i,t}} - P_{D_{i,t}} = \sum_{j \in \Omega_{b_{i}}} P_{ij,t}  \quad \forall i \in \Omega_{b},\ \forall t \in T
+		P_{G_{i},t} - P_{D_{i},t} = \sum_{j \in \Omega_{b_{i}}} P_{ij,t}  \quad \forall i \in \Omega_{b},\ \forall t \in T
 	\end{align}
 
 	\begin{align}
 	\label{eq:Mcons_load_bal_Q}
-		Q_{G_{i,t}} - Q_{D_{i,t}} = \sum_{j \in \Omega_{b_{i}}} Q_{ij,t}  \quad \forall i \in \Omega_{b},\ \forall t \in T
+		Q_{G_{i},t} - Q_{D_{i},t} = \sum_{j \in \Omega_{b_{i}}} Q_{ij,t}  \quad \forall i \in \Omega_{b},\ \forall t \in T
 	\end{align}
 
 \end{frame}
@@ -529,12 +529,12 @@
 
 	\begin{align}
 	\label{eq:Mcons_power_P}
-		\underline{P}_{G_{i}} \leq P_{G_{i,t}} \leq \overline{P}_{G_{i}}  \quad \forall i \in \Omega_{b},\ \forall t \in T
+		\underline{P}_{G_{i}} \leq P_{G_{i},t} \leq \overline{P}_{G_{i}}  \quad \forall i \in \Omega_{b},\ \forall t \in T
 	\end{align}
 
 	\begin{align}
 	\label{eq:Mcons_power_Q}
-		\underline{Q}_{G_{i}} \leq Q_{G_{i,t}} \leq \overline{Q}_{G_{i}}  \quad \forall i \in \Omega_{b},\ \forall t \in T
+		\underline{Q}_{G_{i}} \leq Q_{G_{i},t} \leq \overline{Q}_{G_{i}}  \quad \forall i \in \Omega_{b},\ \forall t \in T
 	\end{align}
 
 	\begin{align}
@@ -560,7 +560,7 @@
 
 	\begin{align}
 	\label{eq:Mcons_current}
-		I_{r_{ij,t}}^{2}+ I_{Im_{ij,t}}^{2} \leq \overline{I}_{ij}^{2} \quad   \forall l \in \Omega_{l} \ \text{or} \ \forall (ij) \in \Omega_{l},\ \forall t \in T
+		I_{r_{ij,t}}^{2}+ I_{Im_{ij,t}}^{2} \leq \overline{I}_{ij}^{2} \quad   \forall l(ij) \in \Omega_{l},\ \forall t \in T
 	\end{align}
 
 	\begin{align}
@@ -568,7 +568,7 @@
 		\begin{split}
 			I_{r_{ij,t}} =\ &-G_{ij}\left\lvert \dot{V}_{i,t} \right\rvert \cos{\theta_{i,t}} + B_{ij}\left\lvert \dot{V}_{i,t} \right\rvert \sin{\theta_{i,t}} \\
 					&+ G_{ij}\left\lvert \dot{V}_{j,t} \right\rvert \cos{\theta_{j,t}} - B_{ij}\left\lvert \dot{V}_{j,t} \right\rvert \sin{\theta_{j,t}} \\
-			&\qquad \forall l \in \Omega_{l} \ \text{or} \ \forall (ij) \in \Omega_{l},\ \forall t \in T
+			&\qquad \forall l(ij) \in \Omega_{l},\  \forall t \in T
 		\end{split}
 	\end{align}
 
@@ -577,7 +577,7 @@
 		\begin{split}
 			I_{Im_{ij,t}} =\ &-B_{ij}\left\lvert \dot{V}_{i,t} \right\rvert \cos{\theta_{i,t}} - G_{ij}\left\lvert \dot{V}_{i,t} \right\rvert \sin{\theta_{i,t}} \\
 			&+ B_{ij}\left\lvert \dot{V}_{j,t} \right\rvert \cos{\theta_{j,t}} + G_{ij}\left\lvert \dot{V}_{j,t} \right\rvert \sin{\theta_{j,t}} \\
-			&\qquad \forall l \in \Omega_{l} \ \text{or} \ \forall (ij) \in \Omega_{l},\ \forall t \in T
+			&\qquad \forall l(ij) \in \Omega_{l},\ \forall t \in T
 		\end{split}
 	\end{align}
 
@@ -610,6 +610,7 @@
 			\textbf{CWNU Power System Economis Lab}
 			\begin{itemize}
 				\item Woong Ko
+				\item Taeho Nam
 			\end{itemize}
 			
 		\end{column}		
