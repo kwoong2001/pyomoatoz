@@ -1,0 +1,7 @@
+\beamer@sectionintoc {1}{Multi Period Optimal Power Flow}{3}{0}{1}
+\beamer@subsectionintoc {1}{1}{Multi-Period Overview}{3}{0}{1}
+\beamer@subsectionintoc {1}{2}{MPOFP Nomenclature}{4}{0}{1}
+\beamer@subsectionintoc {1}{3}{MPOPF At glance...}{7}{0}{1}
+\beamer@subsectionintoc {1}{4}{MPOPF Objective function}{12}{0}{1}
+\beamer@subsectionintoc {1}{5}{Constraints}{14}{0}{1}
+\beamer@sectionintoc {2}{References}{18}{0}{2}
