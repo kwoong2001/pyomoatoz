@@ -1,6 +1,6 @@
 """
-OPF_Case_33bw_without_switch_and_matpower
-- Matpower 에 기반한 OPF 구현
+MPOPF_Case_33bw_without_switch_and_matpower
+- Matpower 에 기반한 MPOPF 구현
 - 선로 switching이 없는 버젼
 
 """
@@ -23,11 +23,14 @@ Set model and parameters with Matpower
 save_directory = os.path.dirname(__file__) + "/Pre_cal_data/"       # Set save parameter directory
 output_directory = os.path.dirname(__file__) + "/Output_data/"     # Set output directory
 
+# Set time
+T = 24
+
 # Set and load Matpower case
 m = start_instance()
 mpc = m.loadcase('case33bw')
 
-simul_case = '33bus_NLP_Opt_problem_'
+simul_case = '33bus_MPOPF_problem_'
 
 # Base MVA, Bus, Branch
 base_MVA = mpc['baseMVA']
@@ -43,18 +46,18 @@ for bus_info in buses:
         
 print(f"{len(buses)}-buses case, Slack bus: [{Slackbus}]")
 
-# Change disconnected line to connected line
-previous_branch_array = branches.copy()# Save disconnected lines data
+# # Save the whole line data
+previous_branch_array = branches.copy()
     
-# Set values and parameters (Bus, Line, Gen, Load, Ymatrix)
-[Bus_info, Line_info, Gen_info, Load_info, Y_mat_info]=Set_All_Values(np,pd,save_directory,m,mpc,previous_branch_array)
+# Set values and parameters (Bus, Line, Gen, Load, Ymatrix, Time)
+[Bus_info, Line_info, Gen_info, Load_info, Y_mat_info, Time_info]=Set_All_Values(np,pd,save_directory,m,mpc,previous_branch_array, T)
 
 """
 Create OPF model and Run Pyomo
 """
 
 # OPF Model Create
-model = OPF_model_creator_without_switch(np,pyo,base_MVA,Slackbus,Bus_info,Line_info,Load_info,Gen_info)
+model = OPF_model_creator_without_switch(np,pyo,base_MVA,Slackbus,Bus_info,Line_info,Load_info,Gen_info,Time_info)
 
 # Create instance for OPF Model
 os.chdir(save_directory)
@@ -165,6 +168,7 @@ print(f"Total P loss: {P_loss_total}MW")
 
 """
 Export result file
+
 - Variable
 - Dual Variable (경우에 따라 출력되지 않는 경우도 존재함)
 """

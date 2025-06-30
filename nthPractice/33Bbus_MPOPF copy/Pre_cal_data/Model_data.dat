@@ -2,5 +2,6 @@ load Buses_set_for_pyomo.csv format=set : Buses;
 load Lines_set_for_pyomo.csv format=set : Lines;
 load Loads_set_for_pyomo.csv format=set : Loads;
 load Gens_set_for_pyomo.csv format=set : Gens;
+load Time_set_for_pyomo.csv format=set : Times;
 
 load Y_mat_info.csv: [Bus_i, Bus_j] Bus_G Bus_B;

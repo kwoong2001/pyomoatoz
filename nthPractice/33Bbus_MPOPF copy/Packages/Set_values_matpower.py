@@ -23,19 +23,21 @@ Set parameters and values
 """
 
 # 선로의 상태를 반영할 수 있는 변수 추가
-def Set_All_Values(np,pd,save_directory,m,mpc,previous_branch_array):
+def Set_All_Values(np,pd,save_directory,m,mpc,previous_branch_array, T):
     #Bus info
     Bus_info = Set_Bus(pd,save_directory,mpc)
     #Line info
     Line_info = Set_Line(pd,save_directory,m,mpc,previous_branch_array)
     #Gen info
-    Gen_info = Set_Gen(pd,save_directory,mpc)
+    Gen_info = Set_Gen(pd,save_directory,mpc, T)
     #Load info
-    Load_info = Set_Load(pd,save_directory,mpc)
+    Load_info = Set_Load(pd,save_directory,mpc, T)
     # Ymatrix
     Y_mat_info = Creating_Y_matrix(np,pd,save_directory,m,mpc)
+    #Time info
+    Time_info = Set_Time(pd,save_directory,T)
 
-    return Bus_info, Line_info, Gen_info, Load_info, Y_mat_info
+    return Bus_info, Line_info, Gen_info, Load_info, Y_mat_info, Time_info
 
 
 def Set_Bus(pd,save_directory,mpc):
@@ -58,20 +60,17 @@ def Set_Bus(pd,save_directory,mpc):
     Bus_info.to_csv(save_directory+'Bus_info.csv',index=False)
     return Bus_info
 
-def Set_Gen(pd,save_directory,mpc):
-    mat_gen_info_columns = ['bus','Pg',	'Qg','Qmax','Qmin','Vg','mBase','status','Pmax','Pmin','Pc1','Pc2','Qc1min','Qc1max','Qc2min','Qc2max','ramp_agc','ramp_10','ramp_30','ramp_q',	'apf']
-    mat_gen_info = pd.DataFrame(mpc['gen'], columns = mat_gen_info_columns)
+def Set_Gen(pd, save_directory, mpc, T):
+    mat_gen_info_columns = ['bus','Pg','Qg','Qmax','Qmin','Vg','mBase','status','Pmax','Pmin','Pc1','Pc2','Qc1min','Qc1max','Qc2min','Qc2max','ramp_agc','ramp_10','ramp_30','ramp_q','apf']
+    mat_gen_info = pd.DataFrame(mpc['gen'], columns=mat_gen_info_columns)
     
-    #%	1	startup	shutdown	n	x1	y1	...	xn	yn
-    #%	2	startup	shutdown	n	c(n-1)	...	c0
-    mat_gen_cost_info_columns = ['type', 'startup',	'shutdown',	'n']
-    gen_columns = ['bus','in_service','vm_pu','p_mw','max_p_mw','min_p_mw','min_q_mvar','max_q_mvar']
+    mat_gen_cost_info_columns = ['type', 'startup', 'shutdown', 'n']
+    gen_columns = ['bus','in_service','vm_pu','p_mw','max_p_mw','min_p_mw','min_q_mvar','max_q_mvar','time']
     
     if mpc['gencost'][0][0].astype(int) == 1:
         for n in range(int(mpc['gencost'][0][3])): # n
             mat_gen_cost_info_columns.append('x'+str(n+1))
             mat_gen_cost_info_columns.append('y'+str(n+1))
-            
             gen_columns.append('x'+str(n+1))
             gen_columns.append('y'+str(n+1))
     else:
@@ -79,52 +78,51 @@ def Set_Gen(pd,save_directory,mpc):
             mat_gen_cost_info_columns.append('c'+str(n-1))
             gen_columns.append('c'+str(n-1))
     
-    #Gen cost Data        
-    mat_gen_cost_info = pd.DataFrame(mpc['gencost'], columns = mat_gen_cost_info_columns)
+    mat_gen_cost_info = pd.DataFrame(mpc['gencost'], columns=mat_gen_cost_info_columns)
     
-    #Gen Data
-    gen_index = range(1,mat_gen_info.shape[0]+1)
-    gen_info = pd.DataFrame(index = gen_index, columns = gen_columns)
+    gen_index = range(1, mat_gen_info.shape[0]+1)
+    multi_index = pd.MultiIndex.from_product([gen_index, range(1, T+1)], names=['Gen_n', 'Time'])
+    gen_info = pd.DataFrame(index=multi_index, columns=gen_columns)
     
-    gen_info['bus']=mat_gen_info['bus'].astype(int).values
-    gen_info['in_service']=mat_gen_info['status'].astype(int).values
-    gen_info['vm_pu']=mat_gen_info['Vg'].values
-    gen_info['p_mw']=mat_gen_info['Pg'].values
-    gen_info['max_p_mw']=mat_gen_info['Pmax'].values
-    gen_info['min_p_mw']=mat_gen_info['Pmin'].values
-    gen_info['min_q_mvar']=mat_gen_info['Qmin'].values
-    gen_info['max_q_mvar']=mat_gen_info['Qmax'].values
-    for cost_idx in gen_columns[gen_columns.index('max_q_mvar')+1:]:
-        gen_info[cost_idx]=mat_gen_cost_info[cost_idx].values
-    
-    tmp = pd.DataFrame(gen_info.index)
-    tmp.columns = ['Gens'] 
-    tmp.to_csv(save_directory+'Gens_set_for_pyomo.csv',index=False) # For Pyomo Sets
-    
+    for t in range(1, T+1):
+        for n in range(1, mat_gen_info.shape[0]+1):
+            gen_info.loc[(n, t), 'bus'] = int(mat_gen_info.loc[n-1, 'bus'])
+            gen_info.loc[(n, t), 'in_service'] = int(mat_gen_info.loc[n-1, 'status'])
+            gen_info.loc[(n, t), 'vm_pu'] = mat_gen_info.loc[n-1, 'Vg']
+            gen_info.loc[(n, t), 'p_mw'] = mat_gen_info.loc[n-1, 'Pg']
+            gen_info.loc[(n, t), 'max_p_mw'] = mat_gen_info.loc[n-1, 'Pmax']
+            gen_info.loc[(n, t), 'min_p_mw'] = mat_gen_info.loc[n-1, 'Pmin']
+            gen_info.loc[(n, t), 'min_q_mvar'] = mat_gen_info.loc[n-1, 'Qmin']
+            gen_info.loc[(n, t), 'max_q_mvar'] = mat_gen_info.loc[n-1, 'Qmax']
+            # cost 컬럼이 실제로 존재할 때만 할당
+            for cost_idx in gen_columns[gen_columns.index('max_q_mvar')+1:-1]:
+                if cost_idx in mat_gen_cost_info.columns:
+                    gen_info.loc[(n, t), cost_idx] = mat_gen_cost_info.loc[n-1, cost_idx]
+
+    tmp = pd.DataFrame(gen_info.index.tolist(), columns=['Gens', 'Time'])
+    tmp.to_csv(save_directory+'Gens_set_for_pyomo.csv', index=False)
     gen_info.to_csv(save_directory+'Gen_info.csv')
-    
     return gen_info
 
-def Set_Load(pd,save_directory,mpc):
+def Set_Load(pd, save_directory, mpc, T):
     mat_bus_info_columns = ['bus_i','type','Pd','Qd','Gs','Bs','area','Vm','Va','baseKV','zone','Vmax','Vmin']
-    mat_bus_info = pd.DataFrame(mpc['bus'], columns = mat_bus_info_columns)
+    mat_bus_info = pd.DataFrame(mpc['bus'], columns=mat_bus_info_columns)
     
-    Load_index = range(1,mat_bus_info.shape[0]+1)
-    Load_column = ['bus','p_mw','q_mvar']
-    Load_info = pd.DataFrame(index=Load_index, columns = Load_column)
+    Load_index = range(1, mat_bus_info.shape[0]+1)
+    Load_column = ['bus','p_mw','q_mvar']  # 'time' 컬럼 제거
+    multi_index = pd.MultiIndex.from_product([Load_index, range(1, T+1)], names=['Load_d', 'Time'])
+    Load_info = pd.DataFrame(index=multi_index, columns=Load_column)
 
-    Load_info['bus'] = mat_bus_info['bus_i'].astype(int).values
-    Load_info['p_mw'] = mat_bus_info['Pd'].values
-    Load_info['q_mvar'] = mat_bus_info['Qd'].values
+    for t in range(1, T+1):
+        for n in range(1, mat_bus_info.shape[0]+1):
+            Load_info.loc[(n, t), 'bus'] = int(mat_bus_info.loc[n-1, 'bus_i'])
+            Load_info.loc[(n, t), 'p_mw'] = mat_bus_info.loc[n-1, 'Pd']
+            Load_info.loc[(n, t), 'q_mvar'] = mat_bus_info.loc[n-1, 'Qd']
+            # Load_info.loc[(n, t), 'time'] = t  # 이 줄 삭제
 
-    Load_info.index.name = 'Load_d'
-    
-    tmp = pd.DataFrame(Load_info.index)
-    tmp.columns = ['Loads'] 
-    tmp.to_csv(save_directory+'Loads_set_for_pyomo.csv',index=False) # For Pyomo Sets
-
+    tmp = pd.DataFrame(Load_info.index.tolist(), columns=['Loads', 'Time'])
+    tmp.to_csv(save_directory+'Loads_set_for_pyomo.csv', index=False)
     Load_info.to_csv(save_directory+'Load_info.csv')
-    
     return Load_info
 
 def Creating_Y_matrix(np,pd,save_directory,m,mpc):
@@ -182,3 +180,12 @@ def Set_Line(pd,save_directory,m,mpc,previous_branch_array):
     Line_info.to_csv(save_directory+'Line_info.csv')
     
     return Line_info
+
+# Time 에 대한 정보 추가
+def Set_Time(pd,save_directory,T):
+    Time_info = pd.DataFrame({'Time': range(1, T+1)})
+    Time_info.to_csv(save_directory+'Time_set_for_pyomo.csv', index=False)
+    
+    return Time_info
+    
+    
