@@ -51,13 +51,13 @@ def OPF_model_creator_without_switch(np,pyo,base_MVA,Slackbus,Bus_info,Line_info
     model.Bus_G = pyo.Param(model.Buses,model.Buses,within=pyo.Any) # Network conductivity matrix
     model.Bus_B = pyo.Param(model.Buses,model.Buses,within=pyo.Any) # Network susceptance matrix
     
-    #Demand at each node - Unit:PU
-    def P_demand_rule(model,i):
-        return sum(Load_info.loc[d,'p_mw']/base_MVA for d in model.Loads if Load_info.loc[d,'bus']==i)
-    model.PDem = pyo.Expression(model.Buses, rule = P_demand_rule)
-    def Q_demand_rule(model,i):
-        return sum(Load_info.loc[d,'q_mvar']/base_MVA for d in model.Loads if Load_info.loc[d,'bus']==i)
-    model.QDem = pyo.Expression(model.Buses, rule = Q_demand_rule)
+    #Demand at each node in time t - Unit:PU
+    def P_demand_rule(model,i,t):
+        return sum(Load_info.loc[d,'p_mw_'+str(t)]/base_MVA for d in model.Loads if Load_info.loc[d,'bus']==i)
+    model.PDem = pyo.Expression(model.Buses, model.Times, rule = P_demand_rule)
+    def Q_demand_rule(model,i,t):
+        return sum(Load_info.loc[d,'q_mvar_'+str(t)]/base_MVA for d in model.Loads if Load_info.loc[d,'bus']==i)
+    model.QDem = pyo.Expression(model.Buses,model.Times, rule = Q_demand_rule)
     
     """
     Variables

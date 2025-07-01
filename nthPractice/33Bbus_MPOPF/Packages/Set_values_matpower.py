@@ -31,7 +31,7 @@ def Set_All_Values(np,pd,save_directory,m,mpc,previous_branch_array, T):
     #Gen info
     Gen_info = Set_Gen(pd,save_directory,mpc)
     #Load info
-    Load_info = Set_Load(pd,save_directory,mpc)
+    Load_info = Set_Load(np,pd,save_directory,mpc,T)
     # Ymatrix
     Y_mat_info = Creating_Y_matrix(np,pd,save_directory,m,mpc)
     #Time info
@@ -107,7 +107,8 @@ def Set_Gen(pd,save_directory,mpc):
     
     return gen_info
 
-def Set_Load(pd,save_directory,mpc):
+# Considering time series
+def Set_Load(np,pd,save_directory,mpc,T):
     mat_bus_info_columns = ['bus_i','type','Pd','Qd','Gs','Bs','area','Vm','Va','baseKV','zone','Vmax','Vmin']
     mat_bus_info = pd.DataFrame(mpc['bus'], columns = mat_bus_info_columns)
     
@@ -120,6 +121,14 @@ def Set_Load(pd,save_directory,mpc):
     Load_info['q_mvar'] = mat_bus_info['Qd'].values
 
     Load_info.index.name = 'Load_d'
+    
+    # 1~(T+1)시간 부하 데이터 생성 및 추가
+    for hour in range(1, T+1):
+        # p_mw에 대한 시간대별 데이터 생성 (0~1 사이 난수 적용)
+        Load_info[f'p_mw_{hour}'] = Load_info['p_mw'] * np.random.rand(len(Load_info))
+        # q_mvar에 대한 시간대별 데이터 생성 (0~1 사이 난수 적용)
+        Load_info[f'q_mvar_{hour}'] = Load_info['q_mvar'] * np.random.rand(len(Load_info))
+    
     
     tmp = pd.DataFrame(Load_info.index)
     tmp.columns = ['Loads'] 

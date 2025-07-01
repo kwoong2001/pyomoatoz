@@ -24,7 +24,7 @@ save_directory = os.path.dirname(__file__) + "/Pre_cal_data/"       # Set save p
 output_directory = os.path.dirname(__file__) + "/Output_data/"     # Set output directory
 
 # Set time
-T = 24
+T = 2
 
 # Set and load Matpower case
 m = start_instance()
