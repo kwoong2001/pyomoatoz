@@ -63,36 +63,29 @@ def OPF_model_creator_without_switch(np,pyo,base_MVA,Slackbus,Bus_info,Line_info
     Variables
     """
     # Voltage variable
-    model.V_mag = pyo.Var(model.Buses,within=pyo.NonNegativeReals,initialize = 1)  # Voltage magnitude
-    model.V_ang = pyo.Var(model.Buses,within=pyo.Reals,initialize = 0)  # Voltage angle
+    model.V_mag = pyo.Var(model.Buses,model.Times,within=pyo.NonNegativeReals,initialize = 1)  # Voltage magnitude
+    model.V_ang = pyo.Var(model.Buses,model.Times,within=pyo.Reals,initialize = 0)  # Voltage angle
     
     #Generation variable
-     # Generation Initialization
-    def P_gen_ini_rule(model,n,i):
-        if Gen_info.loc[n,'bus'] == i:
-            return Gen_info.loc[n,'p_mw']/base_MVA
-        else:
-            return 0.0
-    
-    model.PGen = pyo.Var(model.Gens, model.Buses, within=pyo.NonNegativeReals, initialize=P_gen_ini_rule)
-    model.QGen = pyo.Var(model.Gens, model.Buses, within=pyo.Reals, initialize=0.0)
+    model.PGen = pyo.Var(model.Gens, model.Buses, model.Times, within=pyo.NonNegativeReals, initialize=0.0)
+    model.QGen = pyo.Var(model.Gens, model.Buses, model.Times, within=pyo.Reals, initialize=0.0)
     
     """
     Expressions - Flow - Equation (2) - (4), (7)
     """
     # Equation (3)
-    def P_line_flow_sending_rule(model,l):
+    def P_line_flow_sending_rule(model,l,t):
         i = Line_info.loc[l,'from_bus']
         j = Line_info.loc[l,'to_bus']
-        return ((-1) * model.Bus_G[i,j] * model.V_mag[i] * model.V_mag[i] + model.Bus_G[i,j] * model.V_mag[i]* model.V_mag[j] * pyo.cos(model.V_ang[i]-model.V_ang[j]) + model.Bus_B[i,j] * model.V_mag[i] * model.V_mag[j] * pyo.sin(model.V_ang[i]-model.V_ang[j]))
-    model.P_line_flow_sending = pyo.Expression(model.Lines,rule = P_line_flow_sending_rule)
+        return ((-1) * model.Bus_G[i,j] * model.V_mag[i,t] * model.V_mag[i,t] + model.Bus_G[i,j] * model.V_mag[i,t]* model.V_mag[j,t] * pyo.cos(model.V_ang[i,t]-model.V_ang[j,t]) + model.Bus_B[i,j] * model.V_mag[i,t] * model.V_mag[j,t] * pyo.sin(model.V_ang[i,t]-model.V_ang[j,t]))
+    model.P_line_flow_sending = pyo.Expression(model.Lines,model.Times,rule = P_line_flow_sending_rule)
     
     # Equation (7)
-    def Q_line_flow_sending_rule(model,l):
+    def Q_line_flow_sending_rule(model,l,t):
         i = Line_info.loc[l,'from_bus']
         j = Line_info.loc[l,'to_bus']
-        return (model.Bus_B[i,j] * model.V_mag[i] * model.V_mag[i] + model.Bus_G[i,j] * model.V_mag[i]* model.V_mag[j] * pyo.sin(model.V_ang[i]-model.V_ang[j]) - model.Bus_B[i,j] * model.V_mag[i] * model.V_mag[j] * pyo.cos(model.V_ang[i]-model.V_ang[j]))
-    model.Q_line_flow_sending = pyo.Expression(model.Lines,rule = Q_line_flow_sending_rule)
+        return (model.Bus_B[i,j] * model.V_mag[i,t] * model.V_mag[i,t] + model.Bus_G[i,j] * model.V_mag[i,t]* model.V_mag[j,t] * pyo.sin(model.V_ang[i,t]-model.V_ang[j,t]) - model.Bus_B[i,j] * model.V_mag[i,t] * model.V_mag[j,t] * pyo.cos(model.V_ang[i,t]-model.V_ang[j,t]))
+    model.Q_line_flow_sending = pyo.Expression(model.Lines,model.Times,rule = Q_line_flow_sending_rule)
     
     # Equation (4)
     def P_line_flow_receiving_rule(model,l):
