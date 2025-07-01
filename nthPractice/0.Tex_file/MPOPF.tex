@@ -246,7 +246,7 @@
 
 		\begin{column}{0.5\textwidth}
 			\begin{tabular}{ll}
-				$P_{D_{i}}$, $Q_{D_{i}}$ & \begin{tabular}[l]{@{}l@{}}Active and reactive \\ power demand at bus $i$\end{tabular}\\
+				$P_{D_{i,t}}$, $Q_{D_{i,t}}$ & \begin{tabular}[l]{@{}l@{}}Active and reactive \\ power demand at bus $i$\end{tabular}\\
 				$\overline{P}_{G_{i}}$, $\underline{P}_{G_{i}}$ & \begin{tabular}[l]{@{}l@{}}Maximum and minimum \\active power from generator \\ at bus $i$\end{tabular}\\
 				$\overline{Q}_{G_{i}}$, $\underline{Q}_{G_{i}}$ & \begin{tabular}[l]{@{}l@{}}Maximum and minimum \\reactive power from \\ generator at bus $i$\end{tabular}\\
 				$baseMVA$ & Value of base MVA \\
@@ -283,7 +283,7 @@
 			\begin{tabular}{ll}
 				$\left|\dot{V}_{i,t} \right|$ & \begin{tabular}[l]{@{}l@{}} Voltage magnitude in bus $i$ \\ at time $t$ \\ \end{tabular}\\
 				$\theta_{i,t}$ & \begin{tabular}[l]{@{}l@{}}Voltage phase angle in bus $i$ \\ at time $t$ \\ \end{tabular}\\
-				$P_{G_{i},t}$, $Q_{G_{i},t}$ & \begin{tabular}[l]{@{}l@{}}Active and reactive power \\from generator at bus $i$ \\ at time $t$ \end{tabular}\\
+				$P_{G_{i,t}}$, $Q_{G_{i,t}}$ & \begin{tabular}[l]{@{}l@{}}Active and reactive power \\from generator at bus $i$ \\ at time $t$ \end{tabular}\\
 			\end{tabular}
 
 		\end{column}
@@ -311,10 +311,10 @@
 	\begin{columns}
 		\begin{column}{0.5\textwidth}
 			\begin{align*}
-				P_{G_{i},t} - P_{D_{i},t} = \sum_{j \in \Omega_{b_{i}}}(P_{ij,t})  \quad \forall i \in \Omega_{b},\ \forall t \in T\\
-				Q_{G_{i},t} - Q_{D_{i},t} = \sum_{j \in \Omega_{b_{i}}}(Q_{ij,t})  \quad \forall i \in \Omega_{b},\ \forall t \in T\\
-				\underline{P}_{G_{i}} \leq P_{G_{i},t} \leq \overline{P}_{G_{i}} \quad \forall i \in \Omega_{b},\ \forall t \in T\\
-				\underline{Q}_{G_{i}} \leq Q_{G_{i},t} \leq \overline{Q}_{G_{i}}  \quad \forall i \in \Omega_{b},\ \forall t \in T\\
+				P_{G_{i,t}} - P_{D_{i,t}} = \sum_{j \in \Omega_{b_{i}}}(P_{ij,t})  \quad \forall i \in \Omega_{b},\ \forall t \in T\\
+				Q_{G_{i,t}} - Q_{D_{i,t}} = \sum_{j \in \Omega_{b_{i}}}(Q_{ij,t})  \quad \forall i \in \Omega_{b},\ \forall t \in T\\
+				\underline{P}_{G_{i}} \leq P_{G_{i,t}} \leq \overline{P}_{G_{i}} \quad \forall i \in \Omega_{b},\ \forall t \in T\\
+				\underline{Q}_{G_{i}} \leq Q_{G_{i,t}} \leq \overline{Q}_{G_{i}}  \quad \forall i \in \Omega_{b},\ \forall t \in T\\
 			\end{align*}
 		\end{column}
 
@@ -484,12 +484,12 @@
 
 	\begin{align}
 	\label{eq:Mcons_load_bal_P}
-		P_{G_{i},t} - P_{D_{i},t} = \sum_{j \in \Omega_{b_{i}}} P_{ij,t}  \quad \forall i \in \Omega_{b},\ \forall t \in T
+		P_{G_{i,t}} - P_{D_{i,t}} = \sum_{j \in \Omega_{b_{i}}} P_{ij,t}  \quad \forall i \in \Omega_{b},\ \forall t \in T
 	\end{align}
 
 	\begin{align}
 	\label{eq:Mcons_load_bal_Q}
-		Q_{G_{i},t} - Q_{D_{i},t} = \sum_{j \in \Omega_{b_{i}}} Q_{ij,t}  \quad \forall i \in \Omega_{b},\ \forall t \in T
+		Q_{G_{i,t}} - Q_{D_{i,t}} = \sum_{j \in \Omega_{b_{i}}} Q_{ij,t}  \quad \forall i \in \Omega_{b},\ \forall t \in T
 	\end{align}
 
 \end{frame}
@@ -529,12 +529,12 @@
 
 	\begin{align}
 	\label{eq:Mcons_power_P}
-		\underline{P}_{G_{i}} \leq P_{G_{i},t} \leq \overline{P}_{G_{i}}  \quad \forall i \in \Omega_{b},\ \forall t \in T
+		\underline{P}_{G_{i}} \leq P_{G_{i,t}} \leq \overline{P}_{G_{i}}  \quad \forall i \in \Omega_{b},\ \forall t \in T
 	\end{align}
 
 	\begin{align}
 	\label{eq:Mcons_power_Q}
-		\underline{Q}_{G_{i}} \leq Q_{G_{i},t} \leq \overline{Q}_{G_{i}}  \quad \forall i \in \Omega_{b},\ \forall t \in T
+		\underline{Q}_{G_{i}} \leq Q_{G_{i,t}} \leq \overline{Q}_{G_{i}}  \quad \forall i \in \Omega_{b},\ \forall t \in T
 	\end{align}
 
 	\begin{align}

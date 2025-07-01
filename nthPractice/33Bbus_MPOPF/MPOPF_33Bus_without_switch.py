@@ -118,17 +118,20 @@ P_total = 0
 D_total = 0
 for bus in Bus_info.index:
     for gen in Gen_info.index:
-        if instance.PGen[gen,bus].value >= 1e-4:
-            pgen = instance.PGen[gen,bus].value * base_MVA
-        else:
-            pgen = 0
-        P_total = P_total + pgen
+        for time in Time_info['Time']:
+            if instance.PGen[gen,bus,time].value >= 1e-4:
+                pgen = instance.PGen[gen,bus,time].value * base_MVA
+            else:
+                pgen = 0
+            P_total = P_total + pgen
+
+            if instance.PDem[bus,time].expr()>=1e-4:
+                pdem = instance.PDem[bus,time].expr() * base_MVA
+            else:
+                pdem = 0
+            D_total = D_total + pdem
     
-    if instance.PDem[bus].expr()>=1e-4:
-        pdem = instance.PDem[bus].expr() * base_MVA
-    else:
-        pdem = 0
-    D_total = D_total + pdem
+
 
 print('----------------------------------------------------------------')
 print('OPF Model total gen MW:', P_total)
@@ -158,8 +161,8 @@ P_loss_total = 0
 
 for line in Line_info.index:
     
-    if instance.P_line_loss[line].expr() >= 1e-4:
-        ploss = instance.P_line_loss[line].expr()
+    if instance.P_line_loss[line,time].expr() >= 1e-4:
+        ploss = instance.P_line_loss[line,time].expr()
     else:
         ploss = 0
     P_loss_total = P_loss_total + ploss

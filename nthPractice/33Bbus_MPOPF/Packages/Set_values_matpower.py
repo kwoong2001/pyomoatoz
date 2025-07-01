@@ -124,10 +124,9 @@ def Set_Load(np,pd,save_directory,mpc,T):
     
     # 1~(T+1)시간 부하 데이터 생성 및 추가
     for hour in range(1, T+1):
-        # p_mw에 대한 시간대별 데이터 생성 (0~1 사이 난수 적용)
-        Load_info[f'p_mw_{hour}'] = Load_info['p_mw'] * np.random.rand(len(Load_info))
-        # q_mvar에 대한 시간대별 데이터 생성 (0~1 사이 난수 적용)
-        Load_info[f'q_mvar_{hour}'] = Load_info['q_mvar'] * np.random.rand(len(Load_info))
+        # p_mw와 q_mvar에 대해 시간대별로 동일한 값을 복사
+        Load_info[f'p_mw_{hour}'] = Load_info['p_mw']
+        Load_info[f'q_mvar_{hour}'] = Load_info['q_mvar']
     
     
     tmp = pd.DataFrame(Load_info.index)
