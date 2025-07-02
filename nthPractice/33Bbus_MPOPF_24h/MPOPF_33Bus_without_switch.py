@@ -313,7 +313,7 @@ for i, bus in enumerate(bus_list_ang):
 
 # 히트맵
 fig, ax = plt.subplots(figsize=(14, 5))
-im = ax.imshow(V_ang_matrix, aspect='auto', cmap='twilight', origin='lower')
+im = ax.imshow(V_ang_matrix, aspect='auto', cmap='plasma', origin='lower')
 plt.colorbar(im, ax=ax, label='Voltage Angle (deg)')
 ax.set_xlabel('Time (h)')
 ax.set_ylabel('Bus Number')
@@ -352,7 +352,7 @@ for i, line in enumerate(line_list):
 
 # 히트맵
 fig, ax = plt.subplots(figsize=(14, 6))
-im = ax.imshow(P_line_flow_matrix, aspect='auto', cmap='coolwarm', origin='lower')
+im = ax.imshow(P_line_flow_matrix, aspect='auto', cmap='plasma', origin='lower')
 plt.colorbar(im, ax=ax, label='P_line_flow_sending (p.u.)')
 ax.set_xlabel('Time (h)')
 ax.set_ylabel('Line Number')

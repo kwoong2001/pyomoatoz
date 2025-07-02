@@ -133,20 +133,63 @@
 %	PRESENTATION BODY SLIDES
 %----------------------------------------------------------------------------------------
 
-\section{Multi Period Optimal Power Flow} % Sections are added in order to organize your presentation into discrete blocks, all sections and subsections are automatically output to the table of contents as an overview of the talk but NOT output in the presentation as separate slides
+%------------------------------------------------
+\section{Background}
 
 \begin{frame}
     \centering
     \LARGE
-    Multi Period Optimal Power Flow
+    Background
+\end{frame}
+%------------------------------------------------
+\subsection{Multi Period Optimal Power Flow(MPOPF)}
+
+\begin{frame}
+	\frametitle{Multi Period Optimal Power Flow}
+
+	\begin{itemize}
+		\item \textbf{MPOPF} (Multi-Period Optimal Power Flow) is a method for optimizing the operation of a power system over multiple time periods.
+		\item It extends the conventional single-period Optimal Power Flow (OPF) to consider multiple time intervals.
+	\end{itemize}
+
+	\begin{figure}
+		\includegraphics[width=4 in,keepaspectratio]{MPOPFtime.png}
+	\end{figure}
+	
+\end{frame}
+
+%------------------------------------------------
+\subsection{Reconfiguragble Distribution System}
+
+\begin{frame}
+	\frametitle{Reconfiguragble Distribution System}
+	
+	\begin{itemize}
+		\item \textbf{Reconfigurable Distribution System} is an electrical power distribution network that can dynamically change its structure or topology.
+		\item This is achieved by remotely opening and closing sectionalizing and tie switches within the network.
+	\end{itemize}
+
+	\begin{figure}
+		\includegraphics[width=3 in,keepaspectratio]{modified_33_bus.png}
+	\end{figure}
+
+\end{frame}
+
+%------------------------------------------------
+\section{MPOPF Flow Formulation} % Sections are added in order to organize your presentation into discrete blocks, all sections and subsections are automatically output to the table of contents as an overview of the talk but NOT output in the presentation as separate slides
+
+\begin{frame}
+    \centering
+    \LARGE
+    Multi Period Optimal Power Flow Formulation
 \end{frame}
 
 %------------------------------------------------
 
-\subsection{Multi-Period Overview}
+\subsection{MPOPF Overview}
 
 \begin{frame}
-	\frametitle{Multi-Period Overview}
+	\frametitle{Overview}
 	
 	\begin{columns}
 		\begin{column}{0.5\textwidth}
@@ -594,23 +637,25 @@
 	
 %------------------------------------------------
 
-\section{Multi-Period Optimal Power Flow in a 33-Bus Distribution System}
+\section{Implementation of MPOPF in a reconfigurable 33-bus distribution system}
 
 \begin{frame}
     \centering
     \LARGE
-    Multi-Period Optimal Power Flow \\ in a 33-Bus Distribution System
+    Implementation of Multi-Period Optimal Power Flow \\ in a reconfigurable 33-bus distribution system
 \end{frame}
 
 %------------------------------------------------
 
-\subsection{33-Bus Distribution System}
+\subsection{Disconnected 33-bus distribution system}
+
 
 \begin{frame}
-	\frametitle{33-Bus Distribution System}
+	\frametitle{Disconnected 33-bus distribution system}
+	\framesubtitle{Structure of the Disconnected 33-bus distribution system}
 
 	\begin{figure}
-		\includegraphics[width=4 in,keepaspectratio]{modified_33_bus.png}
+		\includegraphics[width=4 in,keepaspectratio]{modified_33_bus_disc.png}
 	\end{figure}
 
 	
@@ -618,27 +663,81 @@
 
 %------------------------------------------------
 
-\subsection{Load}
 
 \begin{frame}
-	\frametitle{Load}
+	\frametitle{Disconnected 33-bus distribution system}
+	\framesubtitle{Input Data - Load}
 
 	\begin{figure}
-		\includegraphics[width=4 in,keepaspectratio]{../fig/Load_P.png}
+		\includegraphics[width=3 in,keepaspectratio]{../fig/Load_P.png}
 	\end{figure}
+
+	\begin{itemize}
+		\item The load data is based on the 24-hour load profile of a typical distribution system.
+		\item The load varies throughout the day, with the highest demand at 13:00 and the lowest at 4:00.
+	\end{itemize}
 
 	
 \end{frame}
 
 %------------------------------------------------
 
-\subsection{V}
 
 \begin{frame}
-	\frametitle{V\_mag}
+	\frametitle{Disconnected 33-bus distribution system}
+	\framesubtitle{Output Data - Voltage magnitude}
 
 	\begin{figure}
 		\includegraphics[width=5 in,keepaspectratio]{../fig/V_mag_heatmap.png}
+	\end{figure}
+
+	\begin{itemize}
+		\item The smallest voltage drop occurs at 4:00 under the lightest demand, and the largest drop occurs at 13:00 under the heaviest demand.
+		\item The voltage drop increases with distance from the generator(BUS 1).
+	\end{itemize}
+
+	
+\end{frame}
+
+%------------------------------------------------
+
+\begin{frame}
+	\frametitle{Disconnected 33-bus distribution system}
+	\framesubtitle{Output Data - Voltage angle}
+
+	\begin{figure}
+		\includegraphics[width=5 in,keepaspectratio]{../fig/V_ang_heatmap.png}
+	\end{figure}
+
+		\begin{itemize}
+		\item The phase difference is smallest at 4:00 with minimum demand, and largest at 13:00 with maximum demand.
+		\item The phase difference increases with distance from the generator(BUS 1).
+	\end{itemize}
+
+	
+\end{frame}
+%------------------------------------------------
+
+\begin{frame}
+	\frametitle{Disconnected 33-bus distribution system}
+	\framesubtitle{Output Data - P line flow sending(at 13:00)}
+
+	\begin{figure}
+		\includegraphics[width=4 in,keepaspectratio]{modified_33_bus_line_flow.png}
+	\end{figure}
+
+\end{frame}
+
+%------------------------------------------------
+
+\subsection{Connected 33-bus distribution system}
+
+\begin{frame}
+	\frametitle{Connected 33-bus distribution system}
+	\framesubtitle{Structure of the Connected 33-bus distribution system}
+
+	\begin{figure}
+		\includegraphics[width=4 in,keepaspectratio]{modified_33_bus_c.png}
 	\end{figure}
 
 	
