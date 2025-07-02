@@ -16,6 +16,9 @@ from matpower import start_instance
 from oct2py import octave
 from matplotlib.colors import LinearSegmentedColormap
 import os
+import matplotlib.pyplot as plt
+
+
 
 """
 Set model and parameters with Matpower
@@ -24,6 +27,12 @@ Set model and parameters with Matpower
 ## Set directory
 save_directory = os.path.dirname(__file__) + "/Pre_cal_data/"       # Set save parameter directory
 output_directory = os.path.dirname(__file__) + "/Output_data/"     # Set output directory
+
+fig_dir = os.path.join(os.path.dirname(__file__), "fig") # fig 폴더 생성
+os.makedirs(fig_dir, exist_ok=True)
+
+out_dir = os.path.join(os.path.dirname(__file__), "out") # out 폴더 생성
+os.makedirs(out_dir, exist_ok=True)
 
 # Set time
 T = 24
@@ -58,6 +67,7 @@ previous_branch_array = branches.copy()
 
 
 # 시간별 부하 계수 정의
+
 load_factors = {}
 for hour in range(1, T+1):
     if hour == 4:
@@ -86,13 +96,50 @@ for hour in range(1, T+1):
             # 1~3시
             load_factors[hour] = 1.0 - (1.0 - 0.5) * ((hour + (T - 15)) / ((T - 15) + 4))
 
-Load_info_t = Load_info
+Load_info_t = Load_info.copy()
 
 # 시간별 부하 데이터 생성 및 추가
 for hour in range(1, T+1):
     factor = load_factors[hour]
     Load_info_t[f'p_mw_{hour}'] = Load_info['p_mw'] * factor
     Load_info_t[f'q_mvar_{hour}'] = Load_info['q_mvar'] * factor
+
+# 1~33번 모선의 1~24시 P, Q 그래프 생성
+fig_dir = os.path.join(os.path.dirname(__file__), "fig")
+os.makedirs(fig_dir, exist_ok=True)
+
+bus_numbers = Load_info_t.index if hasattr(Load_info_t.index, '__iter__') else range(1, 34)
+hours = range(1, T+1)
+
+# P 그래프
+plt.figure(figsize=(14, 8))
+for bus in bus_numbers:
+    p_profile = [Load_info_t.loc[bus, f'p_mw_{hour}'] for hour in hours]
+    plt.plot(hours, p_profile, label=f'Bus {bus}')
+plt.xlabel('Hour')
+plt.ylabel('P (MW)')
+plt.title('Active Power (P) Profile for Each Bus (1~33) Over 24 Hours')
+plt.grid(True, linestyle='--', alpha=0.5)
+plt.xticks(hours)
+plt.legend(loc='upper right', ncol=2, fontsize='small')
+plt.tight_layout()
+plt.savefig(os.path.join(fig_dir, "Load_P.png"))
+plt.close()
+
+# Q 그래프
+plt.figure(figsize=(14, 8))
+for bus in bus_numbers:
+    q_profile = [Load_info_t.loc[bus, f'q_mvar_{hour}'] for hour in hours]
+    plt.plot(hours, q_profile, label=f'Bus {bus}')
+plt.xlabel('Hour')
+plt.ylabel('Q (MVAr)')
+plt.title('Reactive Power (Q) Profile for Each Bus (1~33) Over 24 Hours')
+plt.grid(True, linestyle='--', alpha=0.5)
+plt.xticks(hours)
+plt.legend(loc='upper right', ncol=2, fontsize='small')
+plt.tight_layout()
+plt.savefig(os.path.join(fig_dir, "Load_Q.png"))
+plt.close()
 """
 Create OPF model and Run Pyomo
 """
@@ -215,11 +262,7 @@ Export result file
 - V_mag, V_ang, P_line_flow_sending 그래프와 데이터(/fig ,/out)
 """
 
-import matplotlib.pyplot as plt
 
-# fig 폴더 생성
-fig_dir = os.path.join(os.path.dirname(__file__), "fig")
-os.makedirs(fig_dir, exist_ok=True)
 
 # ------------------- V_mag(Voltage Magnitude) 시각화 -------------------
 bus_list = sorted(set(idx[0] for idx in instance.V_mag))
@@ -229,30 +272,35 @@ for i, bus in enumerate(bus_list):
     for j, t in enumerate(time_list):
         V_mag_matrix[i, j] = instance.V_mag[bus, t].value
 
-fig, axs = plt.subplots(2, 1, figsize=(14, 10))
-im = axs[0].imshow(V_mag_matrix, aspect='auto', cmap='plasma', origin='lower')
-plt.colorbar(im, ax=axs[0], label='Voltage Magnitude (p.u.)')
-axs[0].set_xlabel('Time (h)')
-axs[0].set_ylabel('Bus Number')
-axs[0].set_title('Voltage Magnitude at Each Bus Over 24 Hours (Heatmap)')
-axs[0].set_xticks(np.arange(len(time_list)))
-axs[0].set_xticklabels([str(t+1) for t in range(len(time_list))])
-axs[0].set_yticks(np.arange(len(bus_list)))
-axs[0].set_yticklabels([str(bus) for bus in bus_list])
+# 히트맵
+fig, ax = plt.subplots(figsize=(14, 5))
+im = ax.imshow(V_mag_matrix, aspect='auto', cmap='plasma', origin='lower')
+plt.colorbar(im, ax=ax, label='Voltage Magnitude (p.u.)')
+ax.set_xlabel('Time (h)')
+ax.set_ylabel('Bus Number')
+ax.set_title('Voltage Magnitude at Each Bus Over 24 Hours (Heatmap)')
+ax.set_xticks(np.arange(len(time_list)))
+ax.set_xticklabels([str(t+1) for t in range(len(time_list))])
+ax.set_yticks(np.arange(len(bus_list)))
+ax.set_yticklabels([str(bus) for bus in bus_list])
+plt.tight_layout()
+fig.savefig(os.path.join(fig_dir, "V_mag_heatmap.png"))
+plt.close(fig)
 
-# 알록달록한 색상 팔레트 사용 (예: tab20)
+# 꺾은선 그래프
+fig, ax = plt.subplots(figsize=(14, 5))
 color_map = plt.get_cmap('tab20', len(bus_list))
 for i, bus in enumerate(bus_list):
     color = color_map(i)
-    axs[1].plot(range(1, len(time_list)+1), V_mag_matrix[i, :], label=f'Bus {bus}', color=color)
-axs[1].set_xlabel('Time (h)')
-axs[1].set_ylabel('Voltage Magnitude (p.u.)')
-axs[1].set_title('Voltage Magnitude at Each Bus (Line Plot)')
-axs[1].set_xticks(np.arange(1, len(time_list)+1))
-axs[1].grid(True, linestyle='--', alpha=0.5)
-axs[1].legend(loc='best', ncol=2, fontsize='small')
+    ax.plot(range(1, len(time_list)+1), V_mag_matrix[i, :], label=f'Bus {bus}', color=color)
+ax.set_xlabel('Time (h)')
+ax.set_ylabel('Voltage Magnitude (p.u.)')
+ax.set_title('Voltage Magnitude at Each Bus (Line Plot)')
+ax.set_xticks(np.arange(1, len(time_list)+1))
+ax.grid(True, linestyle='--', alpha=0.5)
+ax.legend(loc='best', ncol=2, fontsize='small')
 plt.tight_layout()
-fig.savefig(os.path.join(fig_dir, "V_mag.png"))
+fig.savefig(os.path.join(fig_dir, "V_mag_line.png"))
 plt.close(fig)
 
 # ------------------- V_ang(Voltage Angle) 시각화 -------------------
@@ -263,29 +311,35 @@ for i, bus in enumerate(bus_list_ang):
     for j, t in enumerate(time_list_ang):
         V_ang_matrix[i, j] = instance.V_ang[bus, t].value * 180 / np.pi
 
-fig, axs = plt.subplots(2, 1, figsize=(14, 10))
-im = axs[0].imshow(V_ang_matrix, aspect='auto', cmap='twilight', origin='lower')
-plt.colorbar(im, ax=axs[0], label='Voltage Angle (deg)')
-axs[0].set_xlabel('Time (h)')
-axs[0].set_ylabel('Bus Number')
-axs[0].set_title('Voltage Angle at Each Bus Over 24 Hours (Heatmap)')
-axs[0].set_xticks(np.arange(len(time_list_ang)))
-axs[0].set_xticklabels([str(t+1) for t in range(len(time_list_ang))])
-axs[0].set_yticks(np.arange(len(bus_list_ang)))
-axs[0].set_yticklabels([str(bus) for bus in bus_list_ang])
+# 히트맵
+fig, ax = plt.subplots(figsize=(14, 5))
+im = ax.imshow(V_ang_matrix, aspect='auto', cmap='twilight', origin='lower')
+plt.colorbar(im, ax=ax, label='Voltage Angle (deg)')
+ax.set_xlabel('Time (h)')
+ax.set_ylabel('Bus Number')
+ax.set_title('Voltage Angle at Each Bus Over 24 Hours (Heatmap)')
+ax.set_xticks(np.arange(len(time_list_ang)))
+ax.set_xticklabels([str(t+1) for t in range(len(time_list_ang))])
+ax.set_yticks(np.arange(len(bus_list_ang)))
+ax.set_yticklabels([str(bus) for bus in bus_list_ang])
+plt.tight_layout()
+fig.savefig(os.path.join(fig_dir, "V_ang_heatmap.png"))
+plt.close(fig)
 
+# 꺾은선 그래프
+fig, ax = plt.subplots(figsize=(14, 5))
 color_map_ang = plt.get_cmap('tab20', len(bus_list_ang))
 for i, bus in enumerate(bus_list_ang):
     color = color_map_ang(i)
-    axs[1].plot(range(1, len(time_list_ang)+1), V_ang_matrix[i, :], label=f'Bus {bus}', color=color)
-axs[1].set_xlabel('Time (h)')
-axs[1].set_ylabel('Voltage Angle (deg)')
-axs[1].set_title('Voltage Angle at Each Bus (Line Plot)')
-axs[1].set_xticks(np.arange(1, len(time_list_ang)+1))
-axs[1].grid(True, linestyle='--', alpha=0.5)
-axs[1].legend(loc='best', ncol=2, fontsize='small')
+    ax.plot(range(1, len(time_list_ang)+1), V_ang_matrix[i, :], label=f'Bus {bus}', color=color)
+ax.set_xlabel('Time (h)')
+ax.set_ylabel('Voltage Angle (deg)')
+ax.set_title('Voltage Angle at Each Bus (Line Plot)')
+ax.set_xticks(np.arange(1, len(time_list_ang)+1))
+ax.grid(True, linestyle='--', alpha=0.5)
+ax.legend(loc='best', ncol=2, fontsize='small')
 plt.tight_layout()
-fig.savefig(os.path.join(fig_dir, "V_ang.png"))
+fig.savefig(os.path.join(fig_dir, "V_ang_line.png"))
 plt.close(fig)
 
 # ------------------- P_line_flow_sending 시각화 -------------------
@@ -296,36 +350,39 @@ for i, line in enumerate(line_list):
     for j, t in enumerate(time_list):
         P_line_flow_matrix[i, j] = instance.P_line_flow_sending[line, t].expr()
 
-fig, axs = plt.subplots(2, 1, figsize=(14, 12))
-im = axs[0].imshow(P_line_flow_matrix, aspect='auto', cmap='coolwarm', origin='lower')
-plt.colorbar(im, ax=axs[0], label='P_line_flow_sending (p.u.)')
-axs[0].set_xlabel('Time (h)')
-axs[0].set_ylabel('Line Number')
-axs[0].set_title('Active Power Flow (Sending End) for Each Line Over 24 Hours (Heatmap)')
-axs[0].set_xticks(np.arange(len(time_list)))
-axs[0].set_xticklabels([str(t+1) for t in range(len(time_list))])
-axs[0].set_yticks(np.arange(len(line_list)))
-axs[0].set_yticklabels([str(line) for line in line_list])
+# 히트맵
+fig, ax = plt.subplots(figsize=(14, 6))
+im = ax.imshow(P_line_flow_matrix, aspect='auto', cmap='coolwarm', origin='lower')
+plt.colorbar(im, ax=ax, label='P_line_flow_sending (p.u.)')
+ax.set_xlabel('Time (h)')
+ax.set_ylabel('Line Number')
+ax.set_title('Active Power Flow (Sending End) for Each Line Over 24 Hours (Heatmap)')
+ax.set_xticks(np.arange(len(time_list)))
+ax.set_xticklabels([str(t+1) for t in range(len(time_list))])
+ax.set_yticks(np.arange(len(line_list)))
+ax.set_yticklabels([str(line) for line in line_list])
+plt.tight_layout()
+fig.savefig(os.path.join(fig_dir, "P_line_flow_sending_heatmap.png"))
+plt.close(fig)
 
+# 꺾은선 그래프
+fig, ax = plt.subplots(figsize=(14, 6))
 color_map_line = plt.get_cmap('tab20', len(line_list))
 for i, line in enumerate(line_list):
     color = color_map_line(i)
-    axs[1].plot(range(1, len(time_list)+1), P_line_flow_matrix[i, :], label=f'Line {line}', color=color)
-axs[1].set_xlabel('Time (h)')
-axs[1].set_ylabel('P_line_flow_sending (p.u.)')
-axs[1].set_title('Active Power Flow (Sending End) for Each Line (Line Plot)')
-axs[1].set_xticks(np.arange(1, len(time_list)+1))
-axs[1].grid(True, linestyle='--', alpha=0.5)
-axs[1].legend(loc='best', ncol=2, fontsize='small')
+    ax.plot(range(1, len(time_list)+1), P_line_flow_matrix[i, :], label=f'Line {line}', color=color)
+ax.set_xlabel('Time (h)')
+ax.set_ylabel('P_line_flow_sending (p.u.)')
+ax.set_title('Active Power Flow (Sending End) for Each Line (Line Plot)')
+ax.set_xticks(np.arange(1, len(time_list)+1))
+ax.grid(True, linestyle='--', alpha=0.5)
+ax.legend(loc='best', ncol=2, fontsize='small')
 plt.tight_layout()
-fig.savefig(os.path.join(fig_dir, "P_line_flow_sending.png"))
+fig.savefig(os.path.join(fig_dir, "P_line_flow_sending_line.png"))
 plt.close(fig)
 
 # ------------------- 데이터프레임 생성 및 CSV 저장 -------------------
 
-# out 폴더 생성
-out_dir = os.path.join(os.path.dirname(__file__), "out")
-os.makedirs(out_dir, exist_ok=True)
 
 # V_mag 데이터프레임 (행: bus, 열: 시간)
 bus_list = sorted(set(idx[0] for idx in instance.V_mag))
