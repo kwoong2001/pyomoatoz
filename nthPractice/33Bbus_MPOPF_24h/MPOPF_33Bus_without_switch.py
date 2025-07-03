@@ -35,6 +35,9 @@ os.makedirs(fig_dir, exist_ok=True)
 out_dir = os.path.join(os.path.dirname(__file__), "out") # out 폴더 생성
 os.makedirs(out_dir, exist_ok=True)
 
+in_dir = os.path.join(os.path.dirname(__file__), "in") # out 폴더 생성
+os.makedirs(in_dir, exist_ok=True)
+
 # Set time
 T = 24
 
@@ -67,7 +70,7 @@ previous_branch_array = branches.copy()
 [Bus_info, Line_info, Gen_info, Load_info, Y_mat_info, Time_info]=Set_All_Values(np,pd,save_directory,m,mpc,previous_branch_array, T)
 
 
-[Load_info_t] = set_loads(Load_info, T)
+Load_info_t = set_loads(os,pd,Load_info,T,in_dir)
 
 bus_numbers = Load_info_t.index if hasattr(Load_info_t.index, '__iter__') else range(1, 34)
 hours = range(1, T+1)
@@ -131,9 +134,9 @@ optimizer.options['max_iter'] = 30000
 instance.dual = pyo.Suffix(direction=pyo.Suffix.IMPORT)
 Problem = optimizer.solve(instance, tee=True)
 
-#optimizer = pyo.SolverFactory('knitroampl',executable='C:/Program Files/Artelys/Knitro 14.2.0/knitroampl/knitroampl.exe') # Knitro solver 이용 시
-#instance.dual = pyo.Suffix(direction=pyo.Suffix.IMPORT)
-#Problem = optimizer.solve(instance,tee=True)
+# optimizer = pyo.SolverFactory('knitroampl',executable='C:/Program Files/Artelys/Knitro 14.2.0/knitroampl/knitroampl.exe') # Knitro solver 이용 시
+# instance.dual = pyo.Suffix(direction=pyo.Suffix.IMPORT)
+# Problem = optimizer.solve(instance,tee=True)
 
 '''
 in ubuntu 

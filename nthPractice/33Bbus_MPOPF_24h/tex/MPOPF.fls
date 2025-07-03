@@ -1,8 +1,8 @@
-PWD c:/Users/nth/Documents/GitHub/pyomoatoz/nthPractice/33Bbus_MPOPF_24h/tex
+PWD c:/project/github/pyomoatoz#/nthPractice/33Bbus_MPOPF_24h/tex
 INPUT c:/texlive/2025/texmf.cnf
 INPUT c:/texlive/2025/texmf-dist/web2c/texmf.cnf
 INPUT c:/texlive/2025/texmf-var/web2c/pdftex/pdflatex.fmt
-INPUT c:/Users/nth/Documents/GitHub/pyomoatoz/nthPractice/33Bbus_MPOPF_24h/tex/MPOPF.tex
+INPUT c:/project/github/pyomoatoz#/nthPractice/33Bbus_MPOPF_24h/tex/MPOPF.tex
 OUTPUT MPOPF.log
 INPUT c:/texlive/2025/texmf-dist/tex/latex/beamer/beamer.cls
 INPUT c:/texlive/2025/texmf-dist/tex/latex/beamer/beamer.cls
@@ -579,11 +579,6 @@ INPUT ./modified_33_bus_line_flow.png
 INPUT ./modified_33_bus_line_flow.png
 INPUT ./modified_33_bus_line_flow.png
 INPUT ./modified_33_bus_line_flow.png
-INPUT ./modified_33_bus_c.png
-INPUT ./modified_33_bus_c.png
-INPUT ./modified_33_bus_c.png
-INPUT ./modified_33_bus_c.png
-INPUT ./modified_33_bus_c.png
 INPUT c:/texlive/2025/texmf-dist/fonts/tfm/ascender/opensans/OpenSans-Regular-OT1-TLF.tfm
 INPUT c:/texlive/2025/texmf-dist/fonts/vf/ascender/opensans/OpenSans-Regular-OT1-TLF.vf
 INPUT c:/texlive/2025/texmf-dist/fonts/tfm/ascender/opensans/OpenSans-Regular-OT1-TLF--base.tfm

@@ -7,6 +7,5 @@
 \beamer@subsectionintoc {2}{4}{Objective function}{15}{0}{2}
 \beamer@subsectionintoc {2}{5}{Constraints}{17}{0}{2}
 \beamer@sectionintoc {3}{Implementation of MPOPF in a 33-bus distribution system}{21}{0}{3}
-\beamer@subsectionintoc {3}{1}{Disconnected 33-bus distribution system}{22}{0}{3}
-\beamer@subsectionintoc {3}{2}{Connected 33-bus distribution system}{27}{0}{3}
-\beamer@sectionintoc {4}{References}{28}{0}{4}
+\beamer@subsectionintoc {3}{1}{33-bus distribution system}{22}{0}{3}
+\beamer@sectionintoc {4}{References}{27}{0}{4}

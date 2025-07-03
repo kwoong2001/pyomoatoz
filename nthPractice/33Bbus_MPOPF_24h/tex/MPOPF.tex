@@ -647,12 +647,12 @@
 
 %------------------------------------------------
 
-\subsection{Disconnected 33-bus distribution system}
+\subsection{33-bus distribution system}
 
 
 \begin{frame}
-	\frametitle{Disconnected 33-bus distribution system}
-	\framesubtitle{Structure of the Disconnected 33-bus distribution system}
+	\frametitle{33-bus distribution system}
+	\framesubtitle{Structure of the 33-bus distribution system}
 
 	\begin{figure}
 		\includegraphics[width=4 in,keepaspectratio]{modified_33_bus_disc.png}
@@ -665,7 +665,7 @@
 
 
 \begin{frame}
-	\frametitle{Disconnected 33-bus distribution system}
+	\frametitle{33-bus distribution system}
 	\framesubtitle{Input Data - Load}
 
 	\begin{figure}
@@ -674,7 +674,6 @@
 
 	\begin{itemize}
 		\item The load data is based on the 24-hour load profile of a typical distribution system.
-		\item The load varies throughout the day, with the highest demand at 13:00 and the lowest at 4:00.
 	\end{itemize}
 
 	
@@ -684,7 +683,7 @@
 
 
 \begin{frame}
-	\frametitle{Disconnected 33-bus distribution system}
+	\frametitle{33-bus distribution system}
 	\framesubtitle{Output Data - Voltage magnitude}
 
 	\begin{figure}
@@ -692,7 +691,7 @@
 	\end{figure}
 
 	\begin{itemize}
-		\item The smallest voltage drop occurs at 4:00 under the lightest demand, and the largest drop occurs at 13:00 under the heaviest demand.
+		\item Increased demand leads to a larger voltage drop
 		\item The voltage drop increases with distance from the generator(BUS 1).
 	\end{itemize}
 
@@ -702,7 +701,7 @@
 %------------------------------------------------
 
 \begin{frame}
-	\frametitle{Disconnected 33-bus distribution system}
+	\frametitle{33-bus distribution system}
 	\framesubtitle{Output Data - Voltage angle}
 
 	\begin{figure}
@@ -710,8 +709,9 @@
 	\end{figure}
 
 		\begin{itemize}
-		\item The phase difference is smallest at 4:00 with minimum demand, and largest at 13:00 with maximum demand.
-		\item The phase difference increases with distance from the generator(BUS 1).
+		\item Increased demand leads to a greater phase angle.
+		\item The phase angle tends to decrease with increasing distance from the generator.
+		\item Bus 30 has a substantial reactive power demand.
 	\end{itemize}
 
 	
@@ -719,7 +719,7 @@
 %------------------------------------------------
 
 \begin{frame}
-	\frametitle{Disconnected 33-bus distribution system}
+	\frametitle{33-bus distribution system}
 	\framesubtitle{Output Data - P line flow sending(at 13:00)}
 
 	\begin{figure}
@@ -730,18 +730,18 @@
 
 %------------------------------------------------
 
-\subsection{Connected 33-bus distribution system}
+% \subsection{Connected 33-bus distribution system}
 
-\begin{frame}
-	\frametitle{Connected 33-bus distribution system}
-	\framesubtitle{Structure of the Connected 33-bus distribution system}
+% \begin{frame}
+% 	\frametitle{Connected 33-bus distribution system}
+% 	\framesubtitle{Structure of the Connected 33-bus distribution system}
 
-	\begin{figure}
-		\includegraphics[width=4 in,keepaspectratio]{modified_33_bus_c.png}
-	\end{figure}
+% 	\begin{figure}
+% 		\includegraphics[width=4 in,keepaspectratio]{modified_33_bus_c.png}
+% 	\end{figure}
 
 	
-\end{frame}
+% \end{frame}
 
 %------------------------------------------------
 \section{References}
