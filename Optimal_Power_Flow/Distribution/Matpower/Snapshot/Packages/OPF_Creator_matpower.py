@@ -3,7 +3,7 @@ OPF model creator for balanced system
 - PU를 적용하여 OPF를 풀 수 있는 시스템에 적용 가능
 - Unbalanced system은 PU를 적용하기에 까다로울 것임
 
-250709_V10: 무효전력 출력 범위 및 식 수정
+250709_V10: 무효전력 출력 범위 및 충전용량 반영
 
 250618_V8: Generator 관련 제약조건 및 Cost 반영 정보 수정
 
@@ -97,7 +97,7 @@ def OPF_model_creator_without_switch(np,pyo,base_MVA,Slackbus,Bus_info,Line_info
     def P_line_flow_receiving_rule(model,l):
         i = Line_info.loc[l,'from_bus']
         j = Line_info.loc[l,'to_bus']
-        return ((-1) * model.Bus_G[i,j] * model.V_mag[j] * model.V_mag[j] + model.Bus_G[i,j] * model.V_mag[i]* model.V_mag[j] * pyo.cos(model.V_ang[i]-model.V_ang[j]) - model.Bus_B[i,j] * model.V_mag[i] * model.V_mag[j] * pyo.sin(model.V_ang[i]-model.V_ang[j]))
+        return ((-1) * model.Bus_G[i,j] * model.V_mag[j] * model.V_mag[j] + model.Bus_G[i,j] * model.V_mag[i]* model.V_mag[j] * pyo.cos(model.V_ang[i]-model.V_ang[j]) - model.Bus_B[i,j] * model.V_mag[i] * model.V_mag[j] * pyo.sin(model.V_ang[i]-model.V_ang[j])) 
     model.P_line_flow_receiving = pyo.Expression(model.Lines,rule = P_line_flow_receiving_rule)    
     
     def Q_line_flow_receiving_rule(model,l):
@@ -157,11 +157,11 @@ def OPF_model_creator_without_switch(np,pyo,base_MVA,Slackbus,Bus_info,Line_info
     """
     # Power injection at each node
     def P_bal_rule(model, i):
-        return sum(model.PGen[n,i] for n in model.Gens) - model.PDem[i] == ( sum (model.P_line_flow_sending[l] for l in Line_info.index if Line_info.loc[l,"from_bus"] == i ) ) + ( sum (model.P_line_flow_receiving[l]for l in Line_info.index if Line_info.loc[l,"to_bus"] == i ) )
+        return sum(model.PGen[n,i] for n in model.Gens) - model.PDem[i] == ( sum (model.P_line_flow_sending[l] for l in Line_info.index if Line_info.loc[l,"from_bus"] == i ) ) + ( sum (model.P_line_flow_receiving[l]for l in Line_info.index if Line_info.loc[l,"to_bus"] == i ) ) 
     model.P_bal_con = pyo.Constraint(model.Buses,rule=P_bal_rule)
     
     def Q_bal_rule(model, i):
-        return sum(model.QGen[n,i] for n in model.Gens) - model.QDem[i] == ( sum (model.Q_line_flow_sending[l] for l in Line_info.index if Line_info.loc[l,"from_bus"] == i ) ) + ( sum (model.Q_line_flow_receiving[l] for l in Line_info.index if Line_info.loc[l,"to_bus"] == i ) )
+        return sum(model.QGen[n,i] for n in model.Gens) - model.QDem[i] == ( sum (model.Q_line_flow_sending[l] for l in Line_info.index if Line_info.loc[l,"from_bus"] == i ) ) + ( sum (model.Q_line_flow_receiving[l] for l in Line_info.index if Line_info.loc[l,"to_bus"] == i ) ) + (-1)*sum(model.Bus_B[i,m] for m in model.Buses)*model.V_mag[i] * model.V_mag[i]
     model.Q_bal_con = pyo.Constraint(model.Buses,rule=Q_bal_rule)
     
     """
@@ -276,7 +276,7 @@ def OPF_model_creator_without_switch(np,pyo,base_MVA,Slackbus,Bus_info,Line_info
     Minimize Generation cost
     1 Expressions
     """
-    if 1 == 0: 
+    if 1 == 1: 
         def P_cost_rule(model, n,i):
             if Gen_info.loc[n,'bus'] == i:
                 try: # 2차항까지 있는 비용 곡선
@@ -295,7 +295,7 @@ def OPF_model_creator_without_switch(np,pyo,base_MVA,Slackbus,Bus_info,Line_info
     Objective Function - Equation (1)
      - Minimize loss
     """
-    if 1 == 1: 
+    if 1 == 0: 
         # Equation (1)
         def Objective_rule(model):
             return sum(model.P_line_loss[l] for l in model.Lines)
@@ -448,7 +448,7 @@ def OPF_model_creator_with_switch(np,pyo,base_MVA,Slackbus,Bus_info,Line_info,Lo
     model.P_bal_con = pyo.Constraint(model.Buses,rule=P_bal_rule)
     
     def Q_bal_rule(model, i):
-        return sum(model.QGen[n,i] for n in model.Gens) - model.QDem[i] == ( sum (model.Line_Status[l]*model.Q_line_flow_sending[l] for l in Line_info.index if Line_info.loc[l,"from_bus"] == i ) ) + ( sum (model.Line_Status[l]*model.Q_line_flow_receiving[l] for l in Line_info.index if Line_info.loc[l,"to_bus"] == i ) )
+        return sum(model.QGen[n,i] for n in model.Gens) - model.QDem[i] == ( sum (model.Line_Status[l]*model.Q_line_flow_sending[l] for l in Line_info.index if Line_info.loc[l,"from_bus"] == i ) ) + ( sum (model.Line_Status[l]*model.Q_line_flow_receiving[l] for l in Line_info.index if Line_info.loc[l,"to_bus"] == i ) )  + (-1)*sum(model.Bus_B[i,m] for m in model.Buses)*model.V_mag[i] * model.V_mag[i]
     model.Q_bal_con = pyo.Constraint(model.Buses,rule=Q_bal_rule)
     
     

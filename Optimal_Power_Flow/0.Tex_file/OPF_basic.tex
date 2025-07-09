@@ -830,9 +830,10 @@
 		P_{G_{i}} - P_{D_{i}} = \sum_{j \in \Omega_{b_{i}}}(P_{ij})  \quad \forall i \in \Omega_{b}
 	\end{align}
 
+	If a line has a charging susceptance, the model must consider the impact of susceptance($-\sum_{\forall j }B_{ij} \left\lvert \dot{V}_{i}\right\rvert^{2}$).
 	\begin{align}
 	\label{eq:cons_load_bal_Q}
-		Q_{G_{i}} - Q_{D_{i}} = \sum_{j \in \Omega_{b_{i}}}(Q_{ij})  \quad \forall i \in \Omega_{b}
+		Q_{G_{i}} - Q_{D_{i}} = \sum_{j \in \Omega_{b_{i}}}(Q_{ij}) - \sum_{\forall j }B_{ij} \left\lvert \dot{V}_{i}\right\rvert^{2}  \quad \forall i \in \Omega_{b}
 	\end{align}
 
 	\begin{align}

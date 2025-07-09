@@ -25,7 +25,7 @@ output_directory = os.path.dirname(__file__) + "/Output_data/"     # Set output 
 
 # Set and load Matpower case
 m = start_instance()
-mpc = m.loadcase('case33bw')
+mpc = m.loadcase('case9')
 
 simul_case = '33bus_NLP_Opt_problem_'
 

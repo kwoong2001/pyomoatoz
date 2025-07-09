@@ -3,6 +3,8 @@ OPF model creator for balanced system
 - PU를 적용하여 OPF를 풀 수 있는 시스템에 적용 가능
 - Unbalanced system은 PU를 적용하기에 까다로울 것임
 
+250709_V10: 무효전력 출력 범위 및 충전용량 반영
+
 250626_V9: Multi-period 수행이 가능한 버젼으로 만들기 위한 초기 작업
 
 250618_V8: Generator 관련 제약조건 및 Cost 반영 정보 수정
@@ -188,6 +190,7 @@ def OPF_model_creator_without_switch(np,pyo,base_MVA,Slackbus,Bus_info,Line_info
                     for l in Line_info.index
                     if Line_info.loc[l, "to_bus"] == i
                 )
+                + (-1)*sum(model.Bus_B[i,m] for m in model.Buses)*model.V_mag[i] * model.V_mag[i]
             )
         )
     model.Q_bal_con = pyo.Constraint(model.Buses, model.Times, rule=Q_bal_rule)
@@ -487,7 +490,7 @@ def OPF_model_creator_with_switch(np,pyo,base_MVA,Slackbus,Bus_info,Line_info,Lo
     model.P_bal_con = pyo.Constraint(model.Buses,rule=P_bal_rule)
     
     def Q_bal_rule(model, i):
-        return sum(model.QGen[n,i] for n in model.Gens) - model.QDem[i] == ( sum (model.Line_Status[l]*model.Q_line_flow_sending[l] for l in Line_info.index if Line_info.loc[l,"from_bus"] == i ) ) + ( sum (model.Line_Status[l]*model.Q_line_flow_receiving[l] for l in Line_info.index if Line_info.loc[l,"to_bus"] == i ) )
+        return sum(model.QGen[n,i] for n in model.Gens) - model.QDem[i] == ( sum (model.Line_Status[l]*model.Q_line_flow_sending[l] for l in Line_info.index if Line_info.loc[l,"from_bus"] == i ) ) + ( sum (model.Line_Status[l]*model.Q_line_flow_receiving[l] for l in Line_info.index if Line_info.loc[l,"to_bus"] == i ) )  + (-1)*sum(model.Bus_B[i,m] for m in model.Buses)*model.V_mag[i] * model.V_mag[i]
     model.Q_bal_con = pyo.Constraint(model.Buses,rule=Q_bal_rule)
     
     
