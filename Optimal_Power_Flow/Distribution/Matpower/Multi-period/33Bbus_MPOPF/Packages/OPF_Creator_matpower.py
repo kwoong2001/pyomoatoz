@@ -3,6 +3,8 @@ OPF model creator for balanced system
 - PU를 적용하여 OPF를 풀 수 있는 시스템에 적용 가능
 - Unbalanced system은 PU를 적용하기에 까다로울 것임
 
+250709_V10: 무효전력 출력 범위 및 식 수정
+
 250626_V9: Multi-period 수행이 가능한 버젼으로 만들기 위한 초기 작업
 
 250618_V8: Generator 관련 제약조건 및 Cost 반영 정보 수정
@@ -181,7 +183,7 @@ def OPF_model_creator_without_switch(np,pyo,base_MVA,Slackbus,Bus_info,Line_info
         if Gen_info.loc[n,'bus'] == i:
             return Gen_info.loc[n,'min_p_mw']/base_MVA <= model.PGen[n,i]
         else:
-            return model.PGen[n,i] <= 0
+            return model.PGen[n,i] >= 0
     model.P_gen_min_con = pyo.Constraint(model.Gens, model.Buses, rule =P_gen_min_rule)
     
     # Equation (8) - Max, Unit: [PU]
@@ -197,7 +199,7 @@ def OPF_model_creator_without_switch(np,pyo,base_MVA,Slackbus,Bus_info,Line_info
         if Gen_info.loc[n,'bus'] == i:
             return Gen_info.loc[n,'min_q_mvar']/base_MVA <= model.QGen[n,i]
         else:
-            return model.QGen[n,i] <= 0
+            return model.QGen[n,i] >= 0
     model.Q_gen_min_con = pyo.Constraint(model.Gens, model.Buses, rule =Q_gen_min_rule)
     
     # Equation (9) - Max, Unit: [PU]
