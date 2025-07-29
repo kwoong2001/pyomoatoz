@@ -1,7 +1,7 @@
 """
-MPOPF_Case_33bw_without_switch_and_matpower
+MPOPF_Case_33bw_with_switch_and_matpower
 - Matpower 에 기반한 MPOPF 구현
-- 선로 switching이 없는 버젼
+- 선로 switching을 고려한 버젼
 
 """
 
@@ -11,15 +11,9 @@ import os, sys
 import pyomo.environ as pyo
 from Packages.Set_values_matpower import *
 from Packages.OPF_Creator_matpower import *
-from Packages.Set_Loads import *
 from pyomo import environ as pym
 from matpower import start_instance
 from oct2py import octave
-from matplotlib.colors import LinearSegmentedColormap
-import os
-import matplotlib.pyplot as plt
-
-
 
 """
 Set model and parameters with Matpower
@@ -29,15 +23,6 @@ Set model and parameters with Matpower
 save_directory = os.path.dirname(__file__) + "/Pre_cal_data/"       # Set save parameter directory
 output_directory = os.path.dirname(__file__) + "/Output_data/"     # Set output directory
 
-fig_dir = os.path.join(os.path.dirname(__file__), "fig") # fig 폴더 생성
-os.makedirs(fig_dir, exist_ok=True)
-
-out_dir = os.path.join(os.path.dirname(__file__), "out") # out 폴더 생성
-os.makedirs(out_dir, exist_ok=True)
-
-in_dir = os.path.join(os.path.dirname(__file__), "in") # in 폴더 생성
-os.makedirs(in_dir, exist_ok=True)
-
 # Set time
 T = 24
 
@@ -45,7 +30,7 @@ T = 24
 m = start_instance()
 mpc = m.loadcase('case33bw')
 
-simul_case = '33bus_MPOPF_problem_'
+simul_case = '33bus_MPOPF_with_switch_problem_'
 
 # Base MVA, Bus, Branch
 base_MVA = mpc['baseMVA']
@@ -63,53 +48,21 @@ print(f"{len(buses)}-buses case, Slack bus: [{Slackbus}]")
 
 # # Save the whole line data
 previous_branch_array = branches.copy()
-
-
-
+    
 # Set values and parameters (Bus, Line, Gen, Load, Ymatrix, Time)
 [Bus_info, Line_info, Gen_info, Load_info, Y_mat_info, Time_info]=Set_All_Values(np,pd,save_directory,m,mpc,previous_branch_array, T)
 
+for t in range(1,T+1):
+    Load_info["p_mw_"+str(t)]=Load_info["p_mw"]
+    Load_info["q_mvar_"+str(t)]=Load_info["q_mvar"]
 
-Load_info_t = set_loads(os,pd,Load_info,T,in_dir)
 
-bus_numbers = Load_info_t.index if hasattr(Load_info_t.index, '__iter__') else range(1, 34)
-hours = range(1, T+1)
-
-# P 그래프
-plt.figure(figsize=(14, 8))
-for bus in bus_numbers:
-    p_profile = [Load_info_t.loc[bus, f'p_mw_{hour}'] for hour in hours]
-    plt.plot(hours, p_profile, label=f'Bus {bus}')
-plt.xlabel('Hour')
-plt.ylabel('P (MW)')
-plt.title('Active Power (P) Profile for Each Bus (1~33) Over 24 Hours')
-plt.grid(True, linestyle='--', alpha=0.5)
-plt.xticks(hours)
-plt.legend(loc='upper right', ncol=2, fontsize='small')
-plt.tight_layout()
-plt.savefig(os.path.join(fig_dir, "Load_P.png"))
-plt.close()
-
-# Q 그래프
-plt.figure(figsize=(14, 8))
-for bus in bus_numbers:
-    q_profile = [Load_info_t.loc[bus, f'q_mvar_{hour}'] for hour in hours]
-    plt.plot(hours, q_profile, label=f'Bus {bus}')
-plt.xlabel('Hour')
-plt.ylabel('Q (MVAr)')
-plt.title('Reactive Power (Q) Profile for Each Bus (1~33) Over 24 Hours')
-plt.grid(True, linestyle='--', alpha=0.5)
-plt.xticks(hours)
-plt.legend(loc='upper right', ncol=2, fontsize='small')
-plt.tight_layout()
-plt.savefig(os.path.join(fig_dir, "Load_Q.png"))
-plt.close()
 """
 Create OPF model and Run Pyomo
 """
 
 # OPF Model Create
-model = OPF_model_creator_without_switch(np,pyo,base_MVA,Slackbus,Bus_info,Line_info,Load_info_t,Gen_info,Time_info)
+model = OPF_model_creator_with_switch(np,pyo,base_MVA,Slackbus,Bus_info,Line_info,Load_info,Gen_info,Time_info)
 
 # Create instance for OPF Model
 os.chdir(save_directory)
@@ -118,25 +71,14 @@ os.chdir(os.path.dirname(__file__))
 
 print('Initializing OPF model...')
 
-"""
-NEOS 기반 Solver 활용 - 가입 필요 (무료)
-https://neos-server.org/neos/
-- 제한은 있지만 사용하는 것을 추천, IPOPT나 GLPK는 무료이지만 안정적인 활용에 어려움이 많음
-
-# formulate optimization model with NEOS
-os.environ['NEOS_EMAIL'] = ''
-optimizer = pyo.SolverManagerFactory('neos')
-Problem = optimizer.solve(instance, opt='knitro')
-
-"""
 optimizer = pyo.SolverFactory('ipopt')
 optimizer.options['max_iter'] = 30000
 instance.dual = pyo.Suffix(direction=pyo.Suffix.IMPORT)
 Problem = optimizer.solve(instance, tee=True)
 
-# optimizer = pyo.SolverFactory('knitroampl',executable='C:/Program Files/Artelys/Knitro 14.2.0/knitroampl/knitroampl.exe') # Knitro solver 이용 시
-# instance.dual = pyo.Suffix(direction=pyo.Suffix.IMPORT)
-# Problem = optimizer.solve(instance,tee=True)
+#optimizer = pyo.SolverFactory('knitroampl',executable='C:/Program Files/Artelys/Knitro 14.2.0/knitroampl/knitroampl.exe') # Knitro solver 이용 시
+#instance.dual = pyo.Suffix(direction=pyo.Suffix.IMPORT)
+#Problem = optimizer.solve(instance,tee=True)
 
 '''
 in ubuntu 
@@ -189,26 +131,26 @@ print('----------------------------------------------------------------')
 print('OPF Model total gen MW:', P_total)
 print('OPF Model total load MW:', D_total)
 
-# print('----------------------------------------------------------------')
-# print('MatPower validation')
+print('----------------------------------------------------------------')
+print('MatPower validation')
 
-# #Restore line data
-# #mpc['branch'] = previous_branch_array
+#Restore line data
+#mpc['branch'] = previous_branch_array
 
-# # Run OPF
-# mpopt = m.mpoption('verbose', 2)
-# [baseMVA, bus, gen, gencost, branch, f, success, et] = m.runopf(mpc, mpopt, nout='max_nout')
+# Run OPF
+mpopt = m.mpoption('verbose', 2)
+[baseMVA, bus, gen, gencost, branch, f, success, et] = m.runopf(mpc, mpopt, nout='max_nout')
 
-# mat_gen_index = range(1,len(gen)+1)
-# mat_gen_info_columns = ['bus','Pg',	'Qg','Qmax','Qmin','Vg','mBase','status','Pmax','Pmin','Pc1','Pc2','Qc1min','Qc1max','Qc2min','Qc2max','ramp_agc','ramp_10','ramp_30','ramp_q',	'apf','unknown1','unknown2','unknown3','unknown4']
-# mat_gen_info = pd.DataFrame(gen,index = mat_gen_index, columns = mat_gen_info_columns)
+mat_gen_index = range(1,len(gen)+1)
+mat_gen_info_columns = ['bus','Pg',	'Qg','Qmax','Qmin','Vg','mBase','status','Pmax','Pmin','Pc1','Pc2','Qc1min','Qc1max','Qc2min','Qc2max','ramp_agc','ramp_10','ramp_30','ramp_q',	'apf','unknown1','unknown2','unknown3','unknown4']
+mat_gen_info = pd.DataFrame(gen,index = mat_gen_index, columns = mat_gen_info_columns)
 
-# matpower_gen_mw_total = mat_gen_info['Pg'].sum() 
+matpower_gen_mw_total = mat_gen_info['Pg'].sum() 
 
-# print('----------------------------------------------------------------')
-# print('Matpower total gen MW:', matpower_gen_mw_total)
-# print('----------------------------------------------------------------')
-# print('Difference total gen MW:', P_total - (matpower_gen_mw_total))
+print('----------------------------------------------------------------')
+print('Matpower total gen MW:', matpower_gen_mw_total)
+print('----------------------------------------------------------------')
+print('Difference total gen MW:', P_total - (matpower_gen_mw_total))
 P_loss_total = 0
 
 for line in Line_info.index:
@@ -220,160 +162,6 @@ for line in Line_info.index:
     P_loss_total = P_loss_total + ploss
     #print(f"{bus}-Bus Generation: {pgen}MW")
 print(f"Total P loss: {P_loss_total}MW")
-
-"""
-Export result file
-- V_mag, V_ang, P_line_flow_sending 그래프와 데이터(/fig ,/out)
-"""
-
-
-
-# ------------------- V_mag(Voltage Magnitude) 시각화 -------------------
-bus_list = sorted(set(idx[0] for idx in instance.V_mag))
-time_list = sorted(set(idx[1] for idx in instance.V_mag))
-V_mag_matrix = np.zeros((len(bus_list), len(time_list)))
-for i, bus in enumerate(bus_list):
-    for j, t in enumerate(time_list):
-        V_mag_matrix[i, j] = instance.V_mag[bus, t].value
-
-# 히트맵
-fig, ax = plt.subplots(figsize=(14, 5))
-im = ax.imshow(V_mag_matrix, aspect='auto', cmap='plasma', origin='lower')
-plt.colorbar(im, ax=ax, label='Voltage Magnitude (p.u.)')
-ax.set_xlabel('Time (h)')
-ax.set_ylabel('Bus Number')
-ax.set_title('Voltage Magnitude at Each Bus Over 24 Hours (Heatmap)')
-ax.set_xticks(np.arange(len(time_list)))
-ax.set_xticklabels([str(t+1) for t in range(len(time_list))])
-ax.set_yticks(np.arange(len(bus_list)))
-ax.set_yticklabels([str(bus) for bus in bus_list])
-plt.tight_layout()
-fig.savefig(os.path.join(fig_dir, "V_mag_heatmap.png"))
-plt.close(fig)
-
-# 꺾은선 그래프
-fig, ax = plt.subplots(figsize=(14, 5))
-color_map = plt.get_cmap('tab20', len(bus_list))
-for i, bus in enumerate(bus_list):
-    color = color_map(i)
-    ax.plot(range(1, len(time_list)+1), V_mag_matrix[i, :], label=f'Bus {bus}', color=color)
-ax.set_xlabel('Time (h)')
-ax.set_ylabel('Voltage Magnitude (p.u.)')
-ax.set_title('Voltage Magnitude at Each Bus (Line Plot)')
-ax.set_xticks(np.arange(1, len(time_list)+1))
-ax.grid(True, linestyle='--', alpha=0.5)
-ax.legend(loc='best', ncol=2, fontsize='small')
-plt.tight_layout()
-fig.savefig(os.path.join(fig_dir, "V_mag_line.png"))
-plt.close(fig)
-
-# ------------------- V_ang(Voltage Angle) 시각화 -------------------
-bus_list_ang = sorted(set(idx[0] for idx in instance.V_ang))
-time_list_ang = sorted(set(idx[1] for idx in instance.V_ang))
-V_ang_matrix = np.zeros((len(bus_list_ang), len(time_list_ang)))
-for i, bus in enumerate(bus_list_ang):
-    for j, t in enumerate(time_list_ang):
-        V_ang_matrix[i, j] = instance.V_ang[bus, t].value * 180 / np.pi
-
-# 히트맵
-fig, ax = plt.subplots(figsize=(14, 5))
-im = ax.imshow(V_ang_matrix, aspect='auto', cmap='plasma', origin='lower')
-plt.colorbar(im, ax=ax, label='Voltage Angle (deg)')
-ax.set_xlabel('Time (h)')
-ax.set_ylabel('Bus Number')
-ax.set_title('Voltage Angle at Each Bus Over 24 Hours (Heatmap)')
-ax.set_xticks(np.arange(len(time_list_ang)))
-ax.set_xticklabels([str(t+1) for t in range(len(time_list_ang))])
-ax.set_yticks(np.arange(len(bus_list_ang)))
-ax.set_yticklabels([str(bus) for bus in bus_list_ang])
-plt.tight_layout()
-fig.savefig(os.path.join(fig_dir, "V_ang_heatmap.png"))
-plt.close(fig)
-
-# 꺾은선 그래프
-fig, ax = plt.subplots(figsize=(14, 5))
-color_map_ang = plt.get_cmap('tab20', len(bus_list_ang))
-for i, bus in enumerate(bus_list_ang):
-    color = color_map_ang(i)
-    ax.plot(range(1, len(time_list_ang)+1), V_ang_matrix[i, :], label=f'Bus {bus}', color=color)
-ax.set_xlabel('Time (h)')
-ax.set_ylabel('Voltage Angle (deg)')
-ax.set_title('Voltage Angle at Each Bus (Line Plot)')
-ax.set_xticks(np.arange(1, len(time_list_ang)+1))
-ax.grid(True, linestyle='--', alpha=0.5)
-ax.legend(loc='best', ncol=2, fontsize='small')
-plt.tight_layout()
-fig.savefig(os.path.join(fig_dir, "V_ang_line.png"))
-plt.close(fig)
-
-# ------------------- P_line_flow_sending 시각화 -------------------
-line_list = sorted(set(idx[0] for idx in instance.P_line_flow_sending))
-time_list = sorted(set(idx[1] for idx in instance.P_line_flow_sending))
-P_line_flow_matrix = np.zeros((len(line_list), len(time_list)))
-for i, line in enumerate(line_list):
-    for j, t in enumerate(time_list):
-        P_line_flow_matrix[i, j] = instance.P_line_flow_sending[line, t].expr()
-
-# 히트맵
-fig, ax = plt.subplots(figsize=(14, 6))
-im = ax.imshow(P_line_flow_matrix, aspect='auto', cmap='plasma', origin='lower')
-plt.colorbar(im, ax=ax, label='P_line_flow_sending (p.u.)')
-ax.set_xlabel('Time (h)')
-ax.set_ylabel('Line Number')
-ax.set_title('Active Power Flow (Sending End) for Each Line Over 24 Hours (Heatmap)')
-ax.set_xticks(np.arange(len(time_list)))
-ax.set_xticklabels([str(t+1) for t in range(len(time_list))])
-ax.set_yticks(np.arange(len(line_list)))
-ax.set_yticklabels([str(line) for line in line_list])
-plt.tight_layout()
-fig.savefig(os.path.join(fig_dir, "P_line_flow_sending_heatmap.png"))
-plt.close(fig)
-
-# 꺾은선 그래프
-fig, ax = plt.subplots(figsize=(14, 6))
-color_map_line = plt.get_cmap('tab20', len(line_list))
-for i, line in enumerate(line_list):
-    color = color_map_line(i)
-    ax.plot(range(1, len(time_list)+1), P_line_flow_matrix[i, :], label=f'Line {line}', color=color)
-ax.set_xlabel('Time (h)')
-ax.set_ylabel('P_line_flow_sending (p.u.)')
-ax.set_title('Active Power Flow (Sending End) for Each Line (Line Plot)')
-ax.set_xticks(np.arange(1, len(time_list)+1))
-ax.grid(True, linestyle='--', alpha=0.5)
-ax.legend(loc='best', ncol=2, fontsize='small')
-plt.tight_layout()
-fig.savefig(os.path.join(fig_dir, "P_line_flow_sending_line.png"))
-plt.close(fig)
-
-# ------------------- 데이터프레임 생성 및 CSV 저장 -------------------
-
-
-# V_mag 데이터프레임 (행: bus, 열: 시간)
-bus_list = sorted(set(idx[0] for idx in instance.V_mag))
-time_list = sorted(set(idx[1] for idx in instance.V_mag))
-V_mag_df = pd.DataFrame(
-    data = [[instance.V_mag[bus, t].value for t in time_list] for bus in bus_list],
-    index = bus_list,
-    columns = time_list
-)
-V_mag_df.to_csv(os.path.join(out_dir, "V_mag.csv"))
-
-# V_ang 데이터프레임 (행: bus, 열: 시간, 단위: deg)
-V_ang_df = pd.DataFrame(
-    data = [[instance.V_ang[bus, t].value * 180 / np.pi for t in time_list] for bus in bus_list],
-    index = bus_list,
-    columns = time_list
-)
-V_ang_df.to_csv(os.path.join(out_dir, "V_ang_deg.csv"))
-
-# Active_power_flow 데이터프레임 (행: line, 열: 시간)
-line_list = sorted(set(idx[0] for idx in instance.P_line_flow_sending))
-Active_power_flow_df = pd.DataFrame(
-    data = [[instance.P_line_flow_sending[line, t].expr() for t in time_list] for line in line_list],
-    index = line_list,
-    columns = time_list
-)
-Active_power_flow_df.to_csv(os.path.join(out_dir, "Active_power_flow.csv"))
 
 """
 Export result file

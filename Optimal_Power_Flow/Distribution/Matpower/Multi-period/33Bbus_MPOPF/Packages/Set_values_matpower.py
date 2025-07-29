@@ -1,4 +1,6 @@
 """
+250729: Set_time 추가
+
 250612: Set_line 수정
 
 250611: Set_gen 수정
@@ -19,7 +21,7 @@ Set parameters and values
 - Gen Data
 - Load Data
 - Y Bus 
-- Etc 
+- Time
 """
 
 # 선로의 상태를 반영할 수 있는 변수 추가
@@ -107,7 +109,7 @@ def Set_Gen(pd,save_directory,mpc):
     
     return gen_info
 
-def Set_Load(pd,save_directory,mpc):
+def Set_Load(np,pd,save_directory,mpc,T):
     mat_bus_info_columns = ['bus_i','type','Pd','Qd','Gs','Bs','area','Vm','Va','baseKV','zone','Vmax','Vmin']
     mat_bus_info = pd.DataFrame(mpc['bus'], columns = mat_bus_info_columns)
     

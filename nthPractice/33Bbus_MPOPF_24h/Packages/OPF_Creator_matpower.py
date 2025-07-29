@@ -190,7 +190,7 @@ def OPF_model_creator_without_switch(np,pyo,base_MVA,Slackbus,Bus_info,Line_info
                     for l in Line_info.index
                     if Line_info.loc[l, "to_bus"] == i
                 )
-                + (-1)*sum(model.Bus_B[i,m] for m in model.Buses)*model.V_mag[i] * model.V_mag[i]
+                + (-1)*sum(model.Bus_B[i,m] for m in model.Buses)*model.V_mag[i,t] * model.V_mag[i,t]
             )
         )
     model.Q_bal_con = pyo.Constraint(model.Buses, model.Times, rule=Q_bal_rule)

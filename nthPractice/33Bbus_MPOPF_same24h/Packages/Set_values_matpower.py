@@ -1,4 +1,6 @@
 """
+250729: Set_time 추가
+
 250612: Set_line 수정
 
 250611: Set_gen 수정
@@ -19,7 +21,7 @@ Set parameters and values
 - Gen Data
 - Load Data
 - Y Bus 
-- Etc 
+- Time
 """
 
 # 선로의 상태를 반영할 수 있는 변수 추가

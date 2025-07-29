@@ -52,6 +52,11 @@ previous_branch_array = branches.copy()
 # Set values and parameters (Bus, Line, Gen, Load, Ymatrix, Time)
 [Bus_info, Line_info, Gen_info, Load_info, Y_mat_info, Time_info]=Set_All_Values(np,pd,save_directory,m,mpc,previous_branch_array, T)
 
+for t in range(1,T+1):
+    Load_info["p_mw_"+str(t)]=Load_info["p_mw"]
+    Load_info["q_mvar_"+str(t)]=Load_info["q_mvar"]
+
+
 """
 Create OPF model and Run Pyomo
 """
@@ -107,17 +112,20 @@ P_total = 0
 D_total = 0
 for bus in Bus_info.index:
     for gen in Gen_info.index:
-        if instance.PGen[gen,bus].value >= 1e-4:
-            pgen = instance.PGen[gen,bus].value * base_MVA
-        else:
-            pgen = 0
-        P_total = P_total + pgen
+        for time in Time_info['Time']:
+            if instance.PGen[gen,bus,time].value >= 1e-4:
+                pgen = instance.PGen[gen,bus,time].value * base_MVA
+            else:
+                pgen = 0
+            P_total = P_total + pgen
+
+            if instance.PDem[bus,time].expr()>=1e-4:
+                pdem = instance.PDem[bus,time].expr() * base_MVA
+            else:
+                pdem = 0
+            D_total = D_total + pdem
     
-    if instance.PDem[bus].expr()>=1e-4:
-        pdem = instance.PDem[bus].expr() * base_MVA
-    else:
-        pdem = 0
-    D_total = D_total + pdem
+
 
 print('----------------------------------------------------------------')
 print('OPF Model total gen MW:', P_total)
@@ -147,8 +155,8 @@ P_loss_total = 0
 
 for line in Line_info.index:
     
-    if instance.P_line_loss[line].expr() >= 1e-4:
-        ploss = instance.P_line_loss[line].expr()
+    if instance.P_line_loss[line,time].expr() >= 1e-4:
+        ploss = instance.P_line_loss[line,time].expr()
     else:
         ploss = 0
     P_loss_total = P_loss_total + ploss
@@ -180,30 +188,35 @@ for mv in instance.component_objects(ctype=pyo.Var):
         
     var_index = mv.index_set().ordered_data()
     
-    if mv.name == 'V_ang': # Voltage angle
-        var_df = pd.DataFrame(index = var_index, columns = var_columns)
-        var_deg_df= pd.DataFrame(index = var_index, columns = var_columns)
+    if mv.name == 'V_ang':  # Voltage angle
+        var_df = pd.DataFrame(index=var_index, columns=var_columns)
+        var_deg_df = pd.DataFrame(index=var_index, columns=var_columns)
         for idx in var_index:
-            var_df.loc[idx,var_columns[0]] = mv.name
-            var_deg_df.loc[idx,var_columns[0]] = 'V_ang(Deg)'
-            
-            var_df.loc[idx,var_columns[1]] = idx
-            var_deg_df.loc[idx,var_columns[1]] = idx
-            var_df.loc[idx,var_columns[2]] = mv[idx].value
-            var_deg_df.loc[idx,var_columns[2]] = mv[idx].value * 180 / np.pi  # Radian to degree
-    
-    else:    
-        var_df = pd.DataFrame(index = var_index, columns = var_columns)
-        for idx in var_index:
-            var_df.loc[idx,var_columns[0]] = mv.name
+            var_df.loc[idx, var_columns[0]] = mv.name
+            var_deg_df.loc[idx, var_columns[0]] = 'V_ang(Deg)'
+            # Handle multi-index
             if mv.dim() == 1:
-                var_df.loc[idx,var_columns[1]] = idx
-                var_df.loc[idx,var_columns[2]] = mv[idx].value
+                var_df.loc[idx, var_columns[1]] = idx
+                var_deg_df.loc[idx, var_columns[1]] = idx
+                var_df.loc[idx, var_columns[2]] = mv[idx].value
+                var_deg_df.loc[idx, var_columns[2]] = mv[idx].value * 180 / np.pi
             else:
-                for d in range(0,mv.dim()):
-                    var_df.loc[idx,var_columns[d+1]] = idx[d]
-                    
-                var_df.loc[idx,var_columns[mv.dim()+1]] = mv[idx].value
+                for d in range(mv.dim()):
+                    var_df.loc[idx, var_columns[d+1]] = idx[d]
+                    var_deg_df.loc[idx, var_columns[d+1]] = idx[d]
+                var_df.loc[idx, var_columns[mv.dim()+1]] = mv[idx].value
+                var_deg_df.loc[idx, var_columns[mv.dim()+1]] = mv[idx].value * 180 / np.pi
+    else:
+        var_df = pd.DataFrame(index=var_index, columns=var_columns)
+        for idx in var_index:
+            var_df.loc[idx, var_columns[0]] = mv.name
+            if mv.dim() == 1:
+                var_df.loc[idx, var_columns[1]] = idx
+                var_df.loc[idx, var_columns[2]] = mv[idx].value
+            else:
+                for d in range(mv.dim()):
+                    var_df.loc[idx, var_columns[d+1]] = idx[d]
+                var_df.loc[idx, var_columns[mv.dim()+1]] = mv[idx].value
     
     if mv.name == 'V_ang': # Voltage angle
         var_df_list.append(var_df)
