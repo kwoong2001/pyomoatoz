@@ -161,7 +161,7 @@ def OPF_model_creator_without_switch(np,pyo,base_MVA,Slackbus,Bus_info,Line_info
     model.P_bal_con = pyo.Constraint(model.Buses,rule=P_bal_rule)
     
     def Q_bal_rule(model, i):
-        return sum(model.QGen[n,i] for n in model.Gens) - model.QDem[i] == ( sum (model.Q_line_flow_sending[l] for l in Line_info.index if Line_info.loc[l,"from_bus"] == i ) ) + ( sum (model.Q_line_flow_receiving[l] for l in Line_info.index if Line_info.loc[l,"to_bus"] == i ) ) + (-1)*sum(model.Bus_B[i,m] for m in model.Buses)*model.V_mag[i] * model.V_mag[i]
+        return sum(model.QGen[n,i] for n in model.Gens) - model.QDem[i] == ( sum (model.Q_line_flow_sending[l] for l in Line_info.index if Line_info.loc[l,"from_bus"] == i ) ) + ( sum (model.Q_line_flow_receiving[l] for l in Line_info.index if Line_info.loc[l,"to_bus"] == i ) )  - sum(Line_info.loc[l,'b_pu']/2  for l in model.Lines if Line_info.loc[l, "from_bus"] == i) * model.V_mag[i] * model.V_mag[i] - sum(Line_info.loc[l,'b_pu']/2  for l in model.Lines if Line_info.loc[l, "to_bus"] == i) * model.V_mag[i] * model.V_mag[i]
     model.Q_bal_con = pyo.Constraint(model.Buses,rule=Q_bal_rule)
     
     """
@@ -448,7 +448,7 @@ def OPF_model_creator_with_switch(np,pyo,base_MVA,Slackbus,Bus_info,Line_info,Lo
     model.P_bal_con = pyo.Constraint(model.Buses,rule=P_bal_rule)
     
     def Q_bal_rule(model, i):
-        return sum(model.QGen[n,i] for n in model.Gens) - model.QDem[i] == ( sum (model.Line_Status[l]*model.Q_line_flow_sending[l] for l in Line_info.index if Line_info.loc[l,"from_bus"] == i ) ) + ( sum (model.Line_Status[l]*model.Q_line_flow_receiving[l] for l in Line_info.index if Line_info.loc[l,"to_bus"] == i ) )  + (-1)*sum(model.Bus_B[i,m] for m in model.Buses)*model.V_mag[i] * model.V_mag[i]
+        return sum(model.QGen[n,i] for n in model.Gens) - model.QDem[i] == ( sum (model.Line_Status[l]*model.Q_line_flow_sending[l] for l in Line_info.index if Line_info.loc[l,"from_bus"] == i ) ) + ( sum (model.Line_Status[l]*model.Q_line_flow_receiving[l] for l in Line_info.index if Line_info.loc[l,"to_bus"] == i ) )  - sum(model.Line_Status[l] * Line_info.loc[l,'b_pu']/2  for l in model.Lines if Line_info.loc[l, "from_bus"] == i) * model.V_mag[i] * model.V_mag[i] - sum(model.Line_Status[l] * Line_info.loc[l,'b_pu']/2  for l in model.Lines if Line_info.loc[l, "to_bus"] == i) * model.V_mag[i] * model.V_mag[i]
     model.Q_bal_con = pyo.Constraint(model.Buses,rule=Q_bal_rule)
     
     

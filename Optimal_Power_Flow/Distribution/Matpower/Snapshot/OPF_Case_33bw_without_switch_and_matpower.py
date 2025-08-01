@@ -25,7 +25,7 @@ output_directory = os.path.dirname(__file__) + "/Output_data/"     # Set output 
 
 # Set and load Matpower case
 m = start_instance()
-mpc = m.loadcase('case9')
+mpc = m.loadcase('case33bw')
 
 simul_case = '33bus_NLP_Opt_problem_'
 
@@ -74,14 +74,14 @@ optimizer = pyo.SolverManagerFactory('neos')
 Problem = optimizer.solve(instance, opt='knitro')
 
 """
-optimizer = pyo.SolverFactory('ipopt')
-optimizer.options['max_iter'] = 30000
-instance.dual = pyo.Suffix(direction=pyo.Suffix.IMPORT)
-Problem = optimizer.solve(instance, tee=True)
+# optimizer = pyo.SolverFactory('ipopt')
+# optimizer.options['max_iter'] = 30000
+# instance.dual = pyo.Suffix(direction=pyo.Suffix.IMPORT)
+# Problem = optimizer.solve(instance, tee=True)
 
-#optimizer = pyo.SolverFactory('knitroampl',executable='C:/Program Files/Artelys/Knitro 14.2.0/knitroampl/knitroampl.exe') # Knitro solver 이용 시
-#instance.dual = pyo.Suffix(direction=pyo.Suffix.IMPORT)
-#Problem = optimizer.solve(instance,tee=True)
+optimizer = pyo.SolverFactory('knitroampl',executable='C:/Program Files/Artelys/Knitro 14.2.0/knitroampl/knitroampl.exe') # Knitro solver 이용 시
+instance.dual = pyo.Suffix(direction=pyo.Suffix.IMPORT)
+Problem = optimizer.solve(instance,tee=True)
 
 '''
 in ubuntu 
