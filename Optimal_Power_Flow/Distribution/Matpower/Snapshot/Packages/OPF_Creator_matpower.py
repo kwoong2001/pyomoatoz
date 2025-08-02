@@ -110,8 +110,11 @@ def OPF_model_creator_without_switch(np,pyo,base_MVA,Slackbus,Bus_info,Line_info
     def P_line_loss_rule(model,l):
         i = Line_info.loc[l,'from_bus']
         j = Line_info.loc[l,'to_bus']
-        return (model.P_line_flow_sending[l] + model.P_line_flow_receiving[l]) * base_MVA
-    model.P_line_loss = pyo.Expression(model.Lines,rule = P_line_loss_rule)
+        return ( - model.Bus_G[i, j] *
+                ( model.V_mag[i] ** 2 +  model.V_mag[j] ** 2
+                    - 2 * model.V_mag[i] * model.V_mag[j] * pyo.cos(model.V_ang[i] - model.V_ang[j]))
+                ) * base_MVA
+    model.P_line_loss = pyo.Expression(model.Lines, rule = P_line_loss_rule)
     
     def Q_line_loss_rule(model,l):
         i = Line_info.loc[l,'from_bus']
@@ -337,16 +340,11 @@ def OPF_model_creator_with_switch(np,pyo,base_MVA,Slackbus,Bus_info,Line_info,Lo
     model.V_mag = pyo.Var(model.Buses,within=pyo.NonNegativeReals,initialize = 1)  # Voltage magnitude
     model.V_ang = pyo.Var(model.Buses,within=pyo.Reals,initialize = 0)  # Voltage angle
     
-    #Generation variable
-     # Generation Initialization
-    def P_gen_ini_rule(model,n,i):
-        if Gen_info.loc[n,'bus'] == i:
-            return Gen_info.loc[n,'p_mw']/base_MVA
-        else:
-            return 0.0
-    
-    model.PGen = pyo.Var(model.Gens, model.Buses, within=pyo.NonNegativeReals, initialize=P_gen_ini_rule)
+    model.PGen = pyo.Var(model.Gens, model.Buses, within=pyo.NonNegativeReals, initialize=0.0)
     model.QGen = pyo.Var(model.Gens, model.Buses, within=pyo.Reals, initialize=0.0)
+    
+    #Line status variable
+    model.Line_Status = pyo.Var(model.Lines, within=pyo.Integers, bounds=(0, 1),initialize = 0)
     
     """
     Expressions - Flow - Equation (2) - (4), (7)
@@ -382,8 +380,11 @@ def OPF_model_creator_with_switch(np,pyo,base_MVA,Slackbus,Bus_info,Line_info,Lo
     def P_line_loss_rule(model,l):
         i = Line_info.loc[l,'from_bus']
         j = Line_info.loc[l,'to_bus']
-        return (model.P_line_flow_sending[l] + model.P_line_flow_receiving[l]) * base_MVA
-    model.P_line_loss = pyo.Expression(model.Lines,rule = P_line_loss_rule)
+        return ( - model.Bus_G[i, j] * model.Line_Status[l] *
+                ( model.V_mag[i] ** 2 +  model.V_mag[j] ** 2
+                    - 2 * model.V_mag[i] * model.V_mag[j] * pyo.cos(model.V_ang[i] - model.V_ang[j]))
+                ) * base_MVA
+    model.P_line_loss = pyo.Expression(model.Lines, rule = P_line_loss_rule)
     
     def Q_line_loss_rule(model,l):
         i = Line_info.loc[l,'from_bus']
@@ -430,12 +431,9 @@ def OPF_model_creator_with_switch(np,pyo,base_MVA,Slackbus,Bus_info,Line_info,Lo
     Expressions
     Recreation of G and B
     """
-    ##Line status variable
-    model.Line_Status = pyo.Var(model.Lines, within=pyo.Integers, bounds=(0, 1),initialize = 0)
     
     ##Line status constraint
     def Line_status_rule(model,l):
-        #line_con = Line_info[['from_bus','to_bus']].values.tolist()
         
         return model.Line_Status[l] <= 1
                         
@@ -468,7 +466,7 @@ def OPF_model_creator_with_switch(np,pyo,base_MVA,Slackbus,Bus_info,Line_info,Lo
         if Gen_info.loc[n,'bus'] == i:
             return Gen_info.loc[n,'min_p_mw']/base_MVA <= model.PGen[n,i]
         else:
-            return model.PGen[n,i] <= 0
+            return model.PGen[n,i] >= 0
     model.P_gen_min_con = pyo.Constraint(model.Gens, model.Buses, rule =P_gen_min_rule)
     
     # Equation (8) - Max, Unit: [PU]
@@ -484,7 +482,7 @@ def OPF_model_creator_with_switch(np,pyo,base_MVA,Slackbus,Bus_info,Line_info,Lo
         if Gen_info.loc[n,'bus'] == i:
             return Gen_info.loc[n,'min_q_mvar']/base_MVA <= model.QGen[n,i]
         else:
-            return model.QGen[n,i] <= 0
+            return model.QGen[n,i] >= 0
     model.Q_gen_min_con = pyo.Constraint(model.Gens, model.Buses, rule =Q_gen_min_rule)
     
     # Equation (9) - Max, Unit: [PU]
