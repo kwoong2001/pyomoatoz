@@ -1,0 +1,195 @@
+\documentclass{article}
+\usepackage{graphicx} % Required for inserting images
+\usepackage{amsmath,amsfonts}
+\usepackage{cite}
+
+\title{Network reconfiguration in distribution system with radiality constraints}
+\author{Woong Ko}
+\date{August 02, 2025}
+
+\begin{document}
+
+\maketitle
+
+\section*{Nomenclature}
+\subsection*{Indices and sets}
+\begin{itemize}
+\item[$t$ / $\mathcal{T}$] Index of time / Set of time steps.
+\item[$i, j$ / $\mathcal{N}$] Index of bus / Set of buses.
+\item[$l$ / $\mathcal{L}$] Index of line / Set of lines.
+\item[$dg$ / $\mathcal{G}_{dg}$] Index of distributed generator / Set of distributed generators.
+\item[$\mathcal{N}_{dg}$] Set of distributed generation buses.
+\item[$\mathcal{N}_{tf}$] Set of transfer buses.
+\item[$\mathcal{N}_{sb}$] Set of substation buses.
+\item[$\delta^{+}(i) $] Set of lines to bus $i$. 
+\item[$\delta^{-}(i) $] Set of lines from bus $i$. 
+\end{itemize}
+
+\subsection*{Parameters}
+\begin{itemize}
+\item[$n_{b}$] Number of buses.
+\item[$n_{dg}$] Number of distributed generation buses.
+\item[$n_{sb}$] Number of substation buses.
+\item[$Z_{ij}$, $Y_{ij}$] Impedance and admittance of line $ij$ (from bus $i$ to bus $j$).
+\item[$G_{ij}$, $B_{ij}$] Conductance and susceptance of line $ij$ (from bus $i$ to bus $j$).
+\item[$B^{c}_{ij}$] Charging capacity of line $ij$ (from bus $i$ to bus $j$).
+\item[$Base$] Value of base MVA.
+\item[$\overline{V}$, $\underline{V}$] Maximum and minimum voltage magnitude.
+\item[$\overline{S}_{ij}$] Maximum complex power flow limit of line $ij$.
+\item[$P_{D_{i,t}}$, $Q_{D_{i,t}}$] Active and reactive power demand at bus $i$ at time $t$.
+\item[$\overline{P}_{G_{i}}$, $\underline{P}_{G_{i}}$] Maximum and minimum active power from generator at bus $i$.
+\item[$\overline{Q}_{G_{i}}$, $\underline{Q}_{G_{i}}$] Maximum and minimum reactive power from generator at bus $i$.
+\item[$K_{i}$] Fictitious load of each distributed generator in bus $i$ (If bus $i$ has a distributed generator, the value is 1 [PU], otherwise 0).
+\end{itemize}
+
+\subsection*{Functions}
+\begin{itemize}
+\item[$P_{ij,t}$, $Q_{ij,t}$] Active and reactive power flow of line $ij$ at time $t$.
+\item[$I_{r_{ij,t}}$, $I_{Im_{ij,t}}$] Real and Imaginary current flow of line $ij$ at time $t$.
+\item[$P^{lineloss}_{l,t}$] Active line loss of line $l(ij)$ at time $t$.
+\end{itemize}
+
+\subsection*{Variables}
+\begin{itemize}
+\item[$\left|\dot{V}_{i,t} \right|$] Voltage magnitude in bus $i$ at time $t$.
+\item[$\theta_{i,t}$] Voltage phase angle in bus $i$ at time $t$.
+\item[$P_{G_{i},t}$, $Q_{G_{i},t}$] Active and reactive power from generator at bus $i$ at time $t$.
+\item[$x_{ij}$] Circuit that can be reconfigured on line $ij$.
+\item[$y_{i}$] Status of transfer bus in bus $i$.  
+\item[$k_{ij}$] Fictitious flow associated with line $ij$.
+\end{itemize}
+
+
+\section{Optimization problem for network reconfiguration}
+Based on previous researh, the optimization model for the network reconfiguration with radiality constraints can be respresented as follows\cite{5982115}.
+
+Objective function:
+\begin{equation}
+  \begin{split}
+  \min{} \sum_{\forall t}\sum_{\forall i,j}
+  \bigl[-G_{ij}x_{ij} \bigl( & \left|\dot{V}_{i,t} \right|^2 + \left|\dot{V}_{j,t} \right|^2 - 2\left|\dot{V}_{i,t} \right|\left|\dot{V}_{j,t} \right|\cos\left(\theta_{i,t}-\theta_{j,t} \right) \bigr) \bigr]
+  \end{split}
+\label{eq:NR_obj}
+\end{equation} 
+
+General constraints with network, power balance, and switchable lines:
+{\allowdisplaybreaks
+\begin{align}
+  \begin{split}
+    P_{G_{i},t} - P_{D_{i,t}} = \sum_{(ij) \in \delta^{-}(i)}x_{ij}P_{ij,t} - \sum_{(ji) \in \delta^{+}(i)}x_{ji}P_{ji,t},
+    \\ \quad \forall i \in \mathcal{N}, \forall t \in \mathcal{T}.
+  \end{split}
+\end{align}
+
+\begin{align}
+  \begin{split}
+    Q_{G_{i},t} - Q_{D_{i,t}} = \sum_{(ij) \in \delta^{-}(i)}x_{ij}Q_{ij,t} - \sum_{(ji) \in \delta^{+}(i)}x_{ji}Q_{ji,t}  
+    \\- \left|\dot{V}_{i,t} \right|^2(\sum_{(ij) \in \delta^{-}(i)}x_{ij}B^{c}_{ij}/2 +  \sum_{(ji) \in \delta^{+}(i)}x_{ji}B^{c}_{ij}/2)  
+    \\ \quad \forall i \in \mathcal{N}, \forall t \in \mathcal{T}.
+  \end{split}
+\end{align}
+
+\begin{align}
+  \underline{P}_{G_{i}} \leq P_{G_{i},t} \leq \overline{P}_{G_{i}},  \quad \forall i \in \mathcal{N}, \forall t \in \mathcal{T}.\\
+  \underline{Q}_{G_{i}} \leq Q_{G_{i},t} \leq \overline{Q}_{G_{i}},  \quad \forall i \in \mathcal{N}, \forall t \in \mathcal{T}.\\
+  \underline{V} \leq \left|\dot{V}_{i,t} \right| \leq \overline{V},  \quad \forall i \in \mathcal{N}, \forall t \in \mathcal{T}.\\
+  \theta_{i,t} = 0, \quad \forall i \in \mathcal{N}_{sb}, \forall t \in \mathcal{T}.\\
+  -\pi \leq \theta_{i,t} \leq \pi, \quad \forall i \in \mathcal{N} \setminus \mathcal{N}_{sb}, \forall t \in \mathcal{T}.\\
+  P_{ij,t}^{2}+ Q_{ij,t}^{2} \leq x_{ij,t}\overline{S}_{ij}^{2}, \quad   \forall l(ij) \in \mathcal{L}, \forall t \in \mathcal{T}.\\
+  x_{ij} \in \left\{0,1 \right\}, \quad   \forall l(ij) \in \mathcal{L}.
+\end{align}
+}
+
+Functions (Appendix):
+{\allowdisplaybreaks
+\begin{align}
+  \begin{split}
+  P_{ij,t} = &-G_{ij} \left|\dot{V}_{i,t} \right| \left|\dot{V}_{i,t} \right| 
+  + G_{ij} \left|\dot{V}_{i,t} \right| \left|\dot{V}_{j,t} \right| \cos\left(\theta_{i,t}-\theta_{j,t} \right) \\
+  &+ B_{ij} \left|\dot{V}_{i,t} \right| \left|\dot{V}_{j,t} \right| \sin\left(\theta_{i,t}-\theta_{j,t} \right), 
+  \\ & \quad \quad\forall l(ij) \in \mathcal{L}, \forall t \in \mathcal{T}.
+  \end{split}
+\end{align}
+
+
+\begin{align}
+  \begin{split}
+  P_{ji,t}=&-G_{ij} \left|\dot{V}_{j,t} \right| \left|\dot{V}_{j,t} \right| 
+  + G_{ij} \left|\dot{V}_{i,t} \right| \left|\dot{V}_{j,t} \right| \cos\left(\theta_{i,t}-\theta_{j,t} \right)\\
+  &- B_{ij} \left|\dot{V}_{i,t} \right| \left|\dot{V}_{j,t} \right| \sin\left(\theta_{i,t}-\theta_{j,t} \right),
+  \\ & \quad \quad\forall l(ij) \in \mathcal{L}, \forall t \in \mathcal{T}.
+  \end{split}
+\end{align}
+
+\begin{align}
+  \begin{split}
+    Q_{ij,t}=&B_{ij}\left\lvert \dot{V}_{i}\right\rvert^{2} + G_{ij}\left\lvert \dot{V}_{i}\right\rvert\left\lvert \dot{V}_{j}\right\rvert \sin{\left(\theta_{i,t}-\theta_{j,t}\right)} \\
+    &- B_{ij}\left\lvert \dot{V}_{i}\right\rvert\left\lvert \dot{V}_{j}\right\rvert \cos{\left(\theta_{i,t}-\theta_{j,t}\right)},  
+    \\ & \quad \quad\forall l(ij) \in \mathcal{L}, \forall t \in \mathcal{T}.
+  \end{split}
+\end{align}
+
+\begin{align}
+  \begin{split}
+    Q_{ji,t}=&B_{ij}\left\lvert \dot{V}_{j}\right\rvert^{2} - G_{ij}\left\lvert \dot{V}_{i}\right\rvert\left\lvert \dot{V}_{j}\right\rvert \sin{\left(\theta_{i,t}-\theta_{j,t}\right)} \\
+    &- B_{ij}\left\lvert \dot{V}_{i}\right\rvert\left\lvert \dot{V}_{j}\right\rvert \cos{\left(\theta_{i,t}-\theta_{j,t}\right)},  
+    \\ & \quad \quad  \forall l(ij) \in \mathcal{L}, \forall t \in \mathcal{T}.
+  \end{split}
+\end{align}
+
+% \begin{align}
+%   \begin{split}
+%     I_{r_{ij,t}} = &-G_{ij}\left\lvert \dot{V}_{i} \right\rvert \cos{\theta_{i,t}} + B_{ij}\left\lvert \dot{V}_{i} \right\rvert \sin{\theta_{i,t}} \\
+%         &+ G_{ij}\left\lvert \dot{V}_{j} \right\rvert \cos{\theta_{j,t}} - B_{ij}\left\lvert \dot{V}_{j} \right\rvert \sin{\theta_{j,t}}, \forall l \in \mathcal{L}, \forall t \in \mathcal{T}.
+%   \end{split}
+% \end{align}
+
+% \begin{align}
+%   \begin{split}
+%     I_{Im_{ij,t}} = &-B_{ij}\left\lvert \dot{V}_{i} \right\rvert \cos{\theta_{i,t}} - G_{ij}\left\lvert \dot{V}_{i} \right\rvert \sin{\theta_{i,t}} \\
+%     &+ B_{ij}\left\lvert \dot{V}_{j} \right\rvert \cos{\theta_{j,t}} + G_{ij}\left\lvert \dot{V}_{j} \right\rvert \sin{\theta_{j,t}}, \forall l \in \mathcal{L}, \forall t \in \mathcal{T}.
+%   \end{split}
+% \end{align}
+}
+
+- Radiality constraints using transfer buses which don't have distributed generators and demands from \cite{5982115}:
+{\allowdisplaybreaks
+\begin{align}
+  x_{ij} \leq y_{i}, \quad \forall ij \in \delta^{-}(i), i \in \mathcal{N}_{tf}.\\
+  x_{ji} \leq y_{i}, \quad \forall ji \in \delta^{+}(i), i \in \mathcal{N}_{tf}.
+\end{align}
+\begin{align}
+  \begin{split}
+    \sum_{(ij) \in \delta^{-}(i)}x_{ij} + \sum_{(ji) \in \delta^{+}(i)}x_{ji} \geq 2y_{i}, 
+    \quad i \in \mathcal{N}_{tf}.
+  \end{split}
+\end{align}
+
+\begin{align}
+  y_{i} \in {0,1}, \quad i \in \mathcal{N}_{tf}.\\
+  \sum_{(ij) \in \mathcal{L}}x_{ij} = n_{b} - n_{sb} - \sum_{j \in \mathcal{N}_{tf}} (1-y_{j}).
+\end{align}
+}
+
+- Radiality constraints considering distributed generators with fictious load($K$) from \cite{5982115}:
+{\allowdisplaybreaks
+\begin{align}
+  \begin{split}
+    -K_{i} = \sum_{(ij) \in \delta^{-}(i)} k_{ij} - \sum_{(ji) \in \delta^{+}(i)} k_{ji}, 
+    \quad \forall i \in \mathcal{N}.
+  \end{split}
+\end{align}
+
+\begin{align}
+    K_{i} = -n_{dg}, \quad \forall i \in \mathcal{N}_{sb}. \\
+    K_{i} = 1, \quad \forall i \in \mathcal{N}_{dg}. \\
+    K_{i} = 0, \quad \forall i \notin \mathcal{N}_{sb} \cup \mathcal{N}_{dg}. \\
+    |k_{ij}| \leq n_{dg} x_{ij}, \quad \forall (ij) \in \mathcal{L}. 
+\end{align}
+}
+
+
+\bibliographystyle{plain} 
+\bibliography{reference}
+
+\end{document}

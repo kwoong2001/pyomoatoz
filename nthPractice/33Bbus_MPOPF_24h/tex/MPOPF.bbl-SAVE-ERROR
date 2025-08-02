@@ -1,0 +1,83 @@
+% $ biblatex auxiliary file $
+% $ biblatex bbl format version 3.3 $
+% Do not modify the above lines!
+%
+% This is an auxiliary file used by the 'biblatex' package.
+% This file may safely be deleted. It will be recreated by
+% biber as required.
+%
+\begingroup
+\makeatletter
+\@ifundefined{ver@biblatex.sty}
+  {\@latex@error
+     {Missing 'biblatex' package}
+     {The bibliography requires the 'biblatex' package.}
+      \aftergroup\endinput}
+  {}
+\endgroup
+
+
+\refsection{0}
+  \datalist[entry]{nyt/global//global/global/global}
+    \entry{Bellinguer2023}{article}{}{}
+      \name{author}{4}{}{%
+        {{un=0,uniquepart=base,hash=dd9b28bfa427afa1e903dd60385ba167}{%
+           family={Bellinguer},
+           familyi={B\bibinitperiod},
+           given={Kevin},
+           giveni={K\bibinitperiod},
+           givenun=0}}%
+        {{un=0,uniquepart=base,hash=693c5b437fea5df0c75a65d0bbe8fb26}{%
+           family={Girard},
+           familyi={G\bibinitperiod},
+           given={Robin},
+           giveni={R\bibinitperiod},
+           givenun=0}}%
+        {{un=0,uniquepart=base,hash=610821b7907005dfd47afcd7a43d63b0}{%
+           family={Bocquet},
+           familyi={B\bibinitperiod},
+           given={Alexis},
+           giveni={A\bibinitperiod},
+           givenun=0}}%
+        {{un=0,uniquepart=base,hash=3bb1c31b5560a7211b927b541d332ebc}{%
+           family={Chevalier},
+           familyi={C\bibinitperiod},
+           given={Antoine},
+           giveni={A\bibinitperiod},
+           givenun=0}}%
+      }
+      \strng{namehash}{07bab8442736d5cdf01478d6f76f4245}
+      \strng{fullhash}{2e20d292e250e6fbdce24c3ca032995b}
+      \strng{fullhashraw}{2e20d292e250e6fbdce24c3ca032995b}
+      \strng{bibnamehash}{07bab8442736d5cdf01478d6f76f4245}
+      \strng{authorbibnamehash}{07bab8442736d5cdf01478d6f76f4245}
+      \strng{authornamehash}{07bab8442736d5cdf01478d6f76f4245}
+      \strng{authorfullhash}{2e20d292e250e6fbdce24c3ca032995b}
+      \strng{authorfullhashraw}{2e20d292e250e6fbdce24c3ca032995b}
+      \field{sortinit}{B}
+      \field{sortinithash}{d7095fff47cda75ca2589920aae98399}
+      \field{extradatescope}{labelyear}
+      \field{labeldatesource}{}
+      \field{labelnamesource}{author}
+      \field{labeltitlesource}{title}
+      \field{journaltitle}{Scientific Data}
+      \field{number}{1}
+      \field{title}{ELMAS: a one-year dataset of hourly electrical load profiles from 424 French industrial and tertiary sectors}
+      \field{volume}{10}
+      \field{year}{2023}
+      \field{pages}{686}
+      \range{pages}{1}
+      \verb{doi}
+      \verb 10.1038/s41597-023-02542-z
+      \endverb
+      \verb{urlraw}
+      \verb https://doi.org/10.1038/s41597-023-02542-z
+      \endverb
+      \verb{url}
+      \verb https://doi.org/10.1038/s41597-023-02542-z
+      \endverb
+    \endentry
+  \enddatalist
+\endrefsection
+\endinput
+
