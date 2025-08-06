@@ -9,6 +9,7 @@ import pandas as pd
 import numpy as np
 import os
 import pyomo.environ as pyo
+import matplotlib.pyplot as plt
 from Packages.Set_values_matpower import *
 from Packages.OPF_Creator_matpower import *
 from Packages.set_system_env_matpower import *
@@ -61,8 +62,8 @@ os.chdir(os.path.dirname(__file__))
 print('Initializing OPF model...')
 
 #IPOPT Solver 이용
-#optimizer = pyo.SolverFactory('ipopt')
-#optimizer.options['max_iter'] = 30000
+# optimizer = pyo.SolverFactory('ipopt')
+# optimizer.options['max_iter'] = 30000
 
 #KNITRO Solver 이용
 optimizer = pyo.SolverFactory('knitroampl',executable='C:/Program Files/Artelys/Knitro 14.2.0/knitroampl/knitroampl.exe')
@@ -104,26 +105,29 @@ print('----------------------------------------------------------------')
 print('OPF Model total gen MW:', P_total)
 print('OPF Model total load MW:', D_total)
 
-print('----------------------------------------------------------------')
-print('MatPower validation')
 
-#Restore line data
-#mpc['branch'] = previous_branch_array
 
-# Run OPF
-mpopt = m.mpoption('verbose', 2)
-[baseMVA, bus, gen, gencost, branch, f, success, et] = m.runopf(mpc, mpopt, nout='max_nout')
+# print('----------------------------------------------------------------')
+# print('MatPower validation')
 
-mat_gen_index = range(1,len(gen)+1)
-mat_gen_info_columns = ['bus','Pg',	'Qg','Qmax','Qmin','Vg','mBase','status','Pmax','Pmin','Pc1','Pc2','Qc1min','Qc1max','Qc2min','Qc2max','ramp_agc','ramp_10','ramp_30','ramp_q',	'apf','unknown1','unknown2','unknown3','unknown4']
-mat_gen_info = pd.DataFrame(gen,index = mat_gen_index, columns = mat_gen_info_columns)
 
-matpower_gen_mw_total = mat_gen_info['Pg'].sum() 
+# #Restore line data
+# #mpc['branch'] = previous_branch_array
 
-print('----------------------------------------------------------------')
-print('Matpower total gen MW:', matpower_gen_mw_total)
-print('----------------------------------------------------------------')
-print('Difference total gen MW:', P_total - (matpower_gen_mw_total))
+# # Run OPF
+# mpopt = m.mpoption('verbose', 2)
+# [baseMVA, bus, gen, gencost, branch, f, success, et] = m.runopf(mpc, mpopt, nout='max_nout')
+
+# mat_gen_index = range(1,len(gen)+1)
+# mat_gen_info_columns = ['bus','Pg',	'Qg','Qmax','Qmin','Vg','mBase','status','Pmax','Pmin','Pc1','Pc2','Qc1min','Qc1max','Qc2min','Qc2max','ramp_agc','ramp_10','ramp_30','ramp_q',	'apf','unknown1','unknown2','unknown3','unknown4']
+# mat_gen_info = pd.DataFrame(gen,index = mat_gen_index, columns = mat_gen_info_columns)
+
+# matpower_gen_mw_total = mat_gen_info['Pg'].sum() 
+
+# print('----------------------------------------------------------------')
+# print('Matpower total gen MW:', matpower_gen_mw_total)
+# print('----------------------------------------------------------------')
+# print('Difference total gen MW:', P_total - (matpower_gen_mw_total))
 P_loss_total = 0
 
 for line in Line_info.index:
@@ -303,3 +307,99 @@ except:
     print('Check Dual')
 
 print("solve done!")
+
+
+# Plotting the network
+excel_path = output_directory + 'Variables/' + simul_case + 'Variables.xlsx'
+line_status_df = pd.read_excel(excel_path, sheet_name='Line_Status')
+
+line_pairs = []
+for _, row in line_status_df.iterrows():
+    # Value가 1인 라인만 추가
+    if int(row['Value']) == 1:
+        idx = row['Index: Lines']
+        from_bus = int(Line_info.loc[idx, 'from_bus'])
+        to_bus = int(Line_info.loc[idx, 'to_bus'])
+        line_pairs.append((from_bus, to_bus))
+
+# 버스 위치(x, y)
+pos = {
+    1: (0, 1),
+    2: (0, 2),
+    3: (0, 3),
+    4: (0, 4),
+    5: (0, 5),
+    6: (0, 6),
+    7: (0, 7),
+    8: (0, 8),
+    9: (0, 9),
+    10: (0, 10),
+    11: (0, 11),
+    12: (0, 12),
+    13: (0, 13),
+    14: (0, 14),
+    15: (0, 15),
+    16: (0, 16),
+    17: (0, 17),
+    18: (0, 18),
+
+    19: (-2, 4),
+    20: (-2, 5),
+    21: (-2, 6),
+    22: (-2, 7),
+
+    23: (4, 5),
+    24: (4, 6),
+    25: (4, 7),
+
+    26: (2, 7),
+    27: (2, 8),
+    28: (2, 9),
+    29: (2, 10),
+    30: (2, 11),
+    31: (2, 12),
+    32: (2, 13),
+    33: (2, 14),
+}
+
+# 선로(from, to)
+branches = line_pairs
+
+# 회전
+rotated_pos = {bus: (y, x) for bus, (x, y) in pos.items()}
+
+fig, ax = plt.subplots(figsize=(12, 10))
+
+
+for i, (from_bus, to_bus) in enumerate(branches):
+    from_x, from_y = rotated_pos[from_bus]
+    to_x, to_y = rotated_pos[to_bus]
+
+    # y좌표가 같고 x좌표 차이가 2 이상인 경우
+    if from_y == to_y and abs(from_x - to_x) >= 2:
+        mid_y = from_y + 0.4 + 0.1 * (i % 5)  # 선로마다 살짝 다르게
+        # 출발점에서 위로, 도착점에서 위로, 위에서 수평 연결
+        ax.plot([from_x, from_x], [from_y, mid_y], color='black', linewidth=1)
+        ax.plot([to_x, to_x], [to_y, mid_y], color='black', linewidth=1)
+        ax.plot([from_x, to_x], [mid_y, mid_y], color='black', linewidth=1)
+    # y좌표가 다르고 차이가 2 이상인 경우
+    elif abs(from_y - to_y) >= 2:
+        mid_y = (from_y + to_y) / 2 + 0.1 * (i % 5) - 0.4  # 중간에서 살짝 위로
+        # 출발점에서 중간까지, 도착점에서 중간까지, 중간끼리 수평 연결
+        ax.plot([from_x, from_x], [from_y, mid_y], color='black', linewidth=1)
+        ax.plot([to_x, to_x], [to_y, mid_y], color='black', linewidth=1)
+        ax.plot([from_x, to_x], [mid_y, mid_y], color='black', linewidth=1)
+    else:
+        # 그냥 직선 연결
+        ax.plot([from_x, to_x], [from_y, to_y], color='black', linewidth=1)
+
+# 모선 (점) 그리기
+for bus, (x, y) in rotated_pos.items():
+    ax.plot(x, y, 'o', color='black', markersize=8)  # 점으로 표시
+    ax.text(x + 0.25, y - 0.3, str(bus), ha='center', va='top')
+
+ax.set_aspect('equal')
+ax.axis('off')
+
+fig_path = os.path.join(output_directory, "33bus_network_re.png")
+plt.savefig(fig_path, bbox_inches='tight', dpi=300)

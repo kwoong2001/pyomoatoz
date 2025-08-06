@@ -437,7 +437,7 @@ def OPF_model_creator_with_switch(np,pyo,base_MVA,Slackbus,Bus_info,Line_info,Lo
                 return 0
     model.QDg = pyo.Expression(model.Gens, model.Buses,model.Times, rule = Q_dg_rule)
     
-    #Fictious load at each bus in time t - UnitPU
+    #Fictious load at each bus in time t - UnitPU (22)(23)
     # def Fictious_load_rule(model,i,t):
     #     if Slackbus != i:
     #         if i in list(Gen_info['bus']):
@@ -482,23 +482,23 @@ def OPF_model_creator_with_switch(np,pyo,base_MVA,Slackbus,Bus_info,Line_info,Lo
     model.Fictious_flow = pyo.Var(model.Lines, within=pyo.Reals, initialize = 0.0)        
     
     """
-    Expressions - Flow - Equation (2) - (4), (7)
+    Expressions - Flow - Equation
     """
-    # Equation (3)
+    # Equation (11)
     def P_line_flow_sending_rule(model,l,t):
         i = Line_info.loc[l,'from_bus']
         j = Line_info.loc[l,'to_bus']
         return ((-1) * model.Bus_G[i,j] * model.V_mag[i,t] * model.V_mag[i,t] + model.Bus_G[i,j] * model.V_mag[i,t]* model.V_mag[j,t] * pyo.cos(model.V_ang[i,t]-model.V_ang[j,t]) + model.Bus_B[i,j] * model.V_mag[i,t] * model.V_mag[j,t] * pyo.sin(model.V_ang[i,t]-model.V_ang[j,t]))
     model.P_line_flow_sending = pyo.Expression(model.Lines,model.Times,rule = P_line_flow_sending_rule)
     
-    # Equation (7)
+    # Equation (12)
     def Q_line_flow_sending_rule(model,l,t):
         i = Line_info.loc[l,'from_bus']
         j = Line_info.loc[l,'to_bus']
         return (model.Bus_B[i,j] * model.V_mag[i,t] * model.V_mag[i,t] + model.Bus_G[i,j] * model.V_mag[i,t]* model.V_mag[j,t] * pyo.sin(model.V_ang[i,t]-model.V_ang[j,t]) - model.Bus_B[i,j] * model.V_mag[i,t] * model.V_mag[j,t] * pyo.cos(model.V_ang[i,t]-model.V_ang[j,t]))
     model.Q_line_flow_sending = pyo.Expression(model.Lines,model.Times,rule = Q_line_flow_sending_rule)
     
-    # Equation (4)
+    # Equation (13)
     def P_line_flow_receiving_rule(model, l, t):
         i = Line_info.loc[l, 'from_bus']
         j = Line_info.loc[l, 'to_bus']
@@ -506,7 +506,7 @@ def OPF_model_creator_with_switch(np,pyo,base_MVA,Slackbus,Bus_info,Line_info,Lo
                 + model.Bus_G[i, j] * model.V_mag[i, t] * model.V_mag[j, t] * pyo.cos(model.V_ang[i, t] - model.V_ang[j, t])
                 - model.Bus_B[i, j] * model.V_mag[i, t] * model.V_mag[j, t] * pyo.sin(model.V_ang[i, t] - model.V_ang[j, t]))
     model.P_line_flow_receiving = pyo.Expression(model.Lines, model.Times, rule=P_line_flow_receiving_rule)
-
+    # Equation (14)
     def Q_line_flow_receiving_rule(model, l, t):
         i = Line_info.loc[l, 'from_bus']
         j = Line_info.loc[l, 'to_bus']
@@ -515,6 +515,7 @@ def OPF_model_creator_with_switch(np,pyo,base_MVA,Slackbus,Bus_info,Line_info,Lo
                 - model.Bus_B[i, j] * model.V_mag[i, t] * model.V_mag[j, t] * pyo.cos(model.V_ang[i, t] - model.V_ang[j, t]))
     model.Q_line_flow_receiving = pyo.Expression(model.Lines, model.Times, rule=Q_line_flow_receiving_rule)
 
+    # Equation (9?)
     def S_line_flow_sending_rule(model, l, t):
         i = Line_info.loc[l, 'from_bus']
         j = Line_info.loc[l, 'to_bus']
@@ -561,7 +562,7 @@ def OPF_model_creator_with_switch(np,pyo,base_MVA,Slackbus,Bus_info,Line_info,Lo
     #        return model.Line_Status[l,t] <= 1
     #model.Line_Status_con = pyo.Constraint(model.Lines, model.Times,rule = Line_status_rule)
     
-    ##Line status constraint
+    ##Line status constraint  (10)
     def Line_status_rule(model,l):
         return model.Line_Status[l] <= 1
     model.Line_Status_con = pyo.Constraint(model.Lines, rule = Line_status_rule)
@@ -570,7 +571,7 @@ def OPF_model_creator_with_switch(np,pyo,base_MVA,Slackbus,Bus_info,Line_info,Lo
     Radiality constraint - Transfer bus status
     4 Constraints
     """
-    ##Transfer bus constraint 1
+    ##Transfer bus constraint 1 (15)
     # def Transfer_rule1(model,l,t):
     #     i = Line_info.loc[l, 'from_bus']
     #     j = Line_info.loc[l, 'to_bus']
@@ -592,7 +593,7 @@ def OPF_model_creator_with_switch(np,pyo,base_MVA,Slackbus,Bus_info,Line_info,Lo
             return pyo.Constraint.Skip
     model.Transfer_rule1_con = pyo.Constraint(model.Lines, rule = Transfer_rule1)
     
-    ##Transfer bus constraint 2
+    ##Transfer bus constraint 2 (16)
     # def Transfer_rule2(model,l,t):
     #     i = Line_info.loc[l, 'from_bus']
     #     j = Line_info.loc[l, 'to_bus']
@@ -615,7 +616,7 @@ def OPF_model_creator_with_switch(np,pyo,base_MVA,Slackbus,Bus_info,Line_info,Lo
                         
     model.Transfer_rule2_con = pyo.Constraint(model.Lines,rule = Transfer_rule2)
     
-    ##Transfer bus constraint 3
+    ##Transfer bus constraint 3 (17)
     # def Transfer_rule3(model,i,t):
         
     #     if Bus_info.loc[i,"Transfer_Bus"] == 1:
@@ -644,7 +645,7 @@ def OPF_model_creator_with_switch(np,pyo,base_MVA,Slackbus,Bus_info,Line_info,Lo
             return pyo.Constraint.Skip
     model.Transfer_rule3_con = pyo.Constraint(model.Buses,rule = Transfer_rule3)
     
-    ##Transfer bus constraint 4
+    ##Transfer bus constraint 4 (19)
     # def Transfer_rule4(model,t):
     #     return sum(model.Line_Status[l,t] for l in model.Lines) == len(Bus_info) - 1 - sum(1 - model.Transfer_bus_Status[i,t] for i in model.Buses if Bus_info.loc[i,"Transfer_Bus"] == 1)
     # model.Transfer_rule4_con = pyo.Constraint(model.Times,rule = Transfer_rule4)
@@ -657,7 +658,7 @@ def OPF_model_creator_with_switch(np,pyo,base_MVA,Slackbus,Bus_info,Line_info,Lo
     Radiality constraint - Distributed generator, Reactive power generator
     4 Constraints
     """
-    ##Fictious flow constraint 1
+    ##Fictious flow constraint 1 (20)
     # def Fictious_flow_rule1(model,i,t):
     #     return ( sum(model.Fictious_flow[l,t] for l in model.Lines if Line_info.loc[l, "to_bus"] == i) - sum(model.Fictious_flow[l,t] for l in model.Lines if Line_info.loc[l, "from_bus"] == i)) == model.FLoad[i,t]                
     # model.Fictious_flow_rule1_con = pyo.Constraint(model.Buses, model.Times,rule = Fictious_flow_rule1)
@@ -666,7 +667,7 @@ def OPF_model_creator_with_switch(np,pyo,base_MVA,Slackbus,Bus_info,Line_info,Lo
         return ( sum(model.Fictious_flow[l] for l in model.Lines if Line_info.loc[l, "to_bus"] == i) - sum(model.Fictious_flow[l] for l in model.Lines if Line_info.loc[l, "from_bus"] == i)) == model.FLoad[i]                
     model.Fictious_flow_rule1_con = pyo.Constraint(model.Buses,rule = Fictious_flow_rule1)
     
-    ##Fictious flow constraint 2
+    ##Fictious flow constraint 2 (24)
     # def Fictious_flow_rule2(model,l,t):
     #     return (-1)*(len(Gen_info)-1)*model.Line_Status[l,t] <= model.Fictious_flow[l,t]
     # model.Fictious_flow_rule2_con = pyo.Constraint(model.Lines, model.Times,rule = Fictious_flow_rule2)
@@ -685,10 +686,10 @@ def OPF_model_creator_with_switch(np,pyo,base_MVA,Slackbus,Bus_info,Line_info,Lo
     model.Fictious_flow_rule3_con = pyo.Constraint(model.Lines,rule = Fictious_flow_rule3)
     
     """
-    Constraints - Load Balance (Generation - Demand) - Equation (5)-(6)
+    Constraints - Load Balance (Generation - Demand) - Equation
     2 Constraints
     """
-    # Power injection at each node
+    # Power injection at each node (2), (3)
     def P_bal_rule(model, i, t):
         return (
             sum(model.PGen[n, i, t] for n in model.Gens)
@@ -730,7 +731,7 @@ def OPF_model_creator_with_switch(np,pyo,base_MVA,Slackbus,Bus_info,Line_info,Lo
     model.Q_bal_con = pyo.Constraint(model.Buses, model.Times, rule=Q_bal_rule)
     
     """
-    Constraints - Power and voltage - Equation (8)-(11)
+    Constraints - Power and voltage - Equation 
     - Power
     4 Constraints
     2 Expressions - Convert PU to MW,MVar
@@ -740,7 +741,7 @@ def OPF_model_creator_with_switch(np,pyo,base_MVA,Slackbus,Bus_info,Line_info,Lo
     2 Expression - Voltage magnitude [kV], angle [deg]
     """
     
-    # Equation (8) - Min, Unit: [PU]
+    # Equation (4) - Min, Unit: [PU]
     def P_gen_min_rule(model, n, i, t):
         if Gen_info.loc[n, 'bus'] == i:
             if i == Slackbus:
@@ -751,7 +752,7 @@ def OPF_model_creator_with_switch(np,pyo,base_MVA,Slackbus,Bus_info,Line_info,Lo
             return 0 <= model.PGen[n, i, t]
     model.P_gen_min_con = pyo.Constraint(model.Gens, model.Buses, model.Times, rule=P_gen_min_rule)
 
-    # Equation (8) - Max, Unit: [PU]
+    # Equation (4) - Max, Unit: [PU]
     def P_gen_max_rule(model, n, i, t):
         if Gen_info.loc[n, 'bus'] == i:
             if i == Slackbus:
@@ -762,7 +763,7 @@ def OPF_model_creator_with_switch(np,pyo,base_MVA,Slackbus,Bus_info,Line_info,Lo
             return model.PGen[n, i, t] <= 0
     model.P_gen_max_con = pyo.Constraint(model.Gens, model.Buses, model.Times, rule=P_gen_max_rule)
 
-    # Equation (9) - Min, Unit: [PU]
+    # Equation (5) - Min, Unit: [PU]
     def Q_gen_min_rule(model, n, i, t):
         if Gen_info.loc[n, 'bus'] == i:
             if i == Slackbus:
@@ -774,7 +775,7 @@ def OPF_model_creator_with_switch(np,pyo,base_MVA,Slackbus,Bus_info,Line_info,Lo
             return 0 <= model.QGen[n, i, t]
     model.Q_gen_min_con = pyo.Constraint(model.Gens, model.Buses, model.Times, rule=Q_gen_min_rule)
 
-    # Equation (9) - Max, Unit: [PU]
+    # Equation (5) - Max, Unit: [PU]
     def Q_gen_max_rule(model, n, i, t):
         if Gen_info.loc[n, 'bus'] == i:
             if i == Slackbus:
@@ -796,12 +797,11 @@ def OPF_model_creator_with_switch(np,pyo,base_MVA,Slackbus,Bus_info,Line_info,Lo
         return model.QGen[n, i, t] * base_MVA
     model.Q_gen_MVar = pyo.Expression(model.Gens, model.Buses, model.Times, rule=Q_gen_MVar_rule)
     
-    # Equation (10), Unit: [PU]
+    # Equation (6), Unit: [PU]
     def V_limits_rule(model, i,t):
         return (Bus_info['Vmin_pu'][i],model.V_mag[i,t],Bus_info['Vmax_pu'][i])
     model.V_limits_con = pyo.Constraint(model.Buses, model.Times, rule=V_limits_rule)
     
-    # Equation (11)
     def Slack_con_rule(model, i, t):
         if i == Slackbus:
             return model.V_ang[i,t] == 0

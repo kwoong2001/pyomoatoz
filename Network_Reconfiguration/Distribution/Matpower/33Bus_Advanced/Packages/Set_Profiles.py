@@ -50,6 +50,7 @@ def DG_profiles(np,pd,save_directory,T):
     return DG_profile_df
 
 def Load_Profiles(np,pd,save_directory,T,Load_info):
+    import random
     
     ## Load Load profiles - Load profiles 정보를 불러옴
     Load_profile_excel_file = save_directory + 'Load_profiles.xlsx'
@@ -58,8 +59,7 @@ def Load_Profiles(np,pd,save_directory,T,Load_info):
     df_load_profiles = pd.read_excel(Load_profile_excel_file, sheet_name='Load_profiles')
     
     # Profile index 선택
-    profile_idx = 5 # 추후에는 random으로 바뀌거나 Bus에 따라 profile을 선택할 수 있도록 변경
-    
+    profile_idx = 0 # 추후에는 random으로 바뀌거나 Bus에 따라 profile을 선택할 수 있도록 변경
     Load_profile_df_index = Load_info.index
     Load_profile_df_columns = []
     for t in range(1,T+1):
@@ -70,6 +70,7 @@ def Load_Profiles(np,pd,save_directory,T,Load_info):
     
     for load in Load_profile_df_index:
         for t in range(1,T+1):
+            profile_idx = random.randint(1, 9)
             Load_profile_df.loc[load,'p_mw_'+str(t)] = Load_info.loc[load,'p_mw']*df_load_profiles.loc[t-1,profile_idx]
             Load_profile_df.loc[load,'q_mvar_'+str(t)] = Load_info.loc[load,'q_mvar']*df_load_profiles.loc[t-1,profile_idx]
         
