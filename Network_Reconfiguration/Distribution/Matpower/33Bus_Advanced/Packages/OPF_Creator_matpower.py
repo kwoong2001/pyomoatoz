@@ -391,7 +391,7 @@ def OPF_model_creator_without_switch(np,pyo,base_MVA,Slackbus,Bus_info,Line_info
 
 
 # Line 상태를 반영할 수 있는 OPF 함수
-def OPF_model_creator_with_switch(np,pyo,base_MVA,Slackbus,Bus_info,Line_info,Load_info,Gen_info,Time_info,DG_profile_df,Load_profile_df):
+def OPF_model_creator_with_switch(np,pyo,base_MVA,Slackbus,Bus_info,Line_info,Load_info,Gen_info,Time_info,DG_profile_df,Load_profile_df,pv_curtailment_df):
 
     model = pyo.AbstractModel() #dat 파일을 무조건 사용해야 함
 
@@ -684,7 +684,7 @@ def OPF_model_creator_with_switch(np,pyo,base_MVA,Slackbus,Bus_info,Line_info,Lo
     def Fictious_flow_rule3(model,l):
         return model.Fictious_flow[l] <= (len(Gen_info)-1)*model.Line_Status[l]
     model.Fictious_flow_rule3_con = pyo.Constraint(model.Lines,rule = Fictious_flow_rule3)
-    
+
     """
     Constraints - Load Balance (Generation - Demand) - Equation
     2 Constraints
@@ -747,7 +747,8 @@ def OPF_model_creator_with_switch(np,pyo,base_MVA,Slackbus,Bus_info,Line_info,Lo
             if i == Slackbus:
                 return Gen_info.loc[n, 'min_p_mw'] / base_MVA <= model.PGen[n, i, t]
             else:
-                return model.PDg[n,i,t] <= model.PGen[n, i, t]
+                # return model.PDg[n,i,t] <= model.PGen[n, i, t]
+                return 0 <= model.PGen[n, i, t]
         else:
             return 0 <= model.PGen[n, i, t]
     model.P_gen_min_con = pyo.Constraint(model.Gens, model.Buses, model.Times, rule=P_gen_min_rule)
@@ -769,8 +770,8 @@ def OPF_model_creator_with_switch(np,pyo,base_MVA,Slackbus,Bus_info,Line_info,Lo
             if i == Slackbus:
                 return Gen_info.loc[n, 'min_q_mvar'] / base_MVA <= model.QGen[n, i, t]
             else:
-                return model.QDg[n,i,t] * (-1) <= model.QGen[n, i, t]
-                #return 0 <= model.QGen[n, i, t]
+                # return model.QDg[n,i,t] * (-1) <= model.QGen[n, i, t]
+                return 0 <= model.QGen[n, i, t]
         else:
             return 0 <= model.QGen[n, i, t]
     model.Q_gen_min_con = pyo.Constraint(model.Gens, model.Buses, model.Times, rule=Q_gen_min_rule)
@@ -787,6 +788,67 @@ def OPF_model_creator_with_switch(np,pyo,base_MVA,Slackbus,Bus_info,Line_info,Lo
             return model.QGen[n, i, t] <= 0
     model.Q_gen_max_con = pyo.Constraint(model.Gens, model.Buses, model.Times, rule=Q_gen_max_rule)
 
+    
+    """
+    Constraints - PV Curtailments
+    3 Constraints
+    """
+
+    def PV_P_curtailment_rule(model, n, i, t):
+        if Gen_info.loc[n, 'bus'] == i and n in pv_curtailment_df['Gen number'].values:
+                pv_p_max_mw = pv_curtailment_df.loc[pv_curtailment_df['Gen number'] == n, 'PV_max[MW]'].values[0]
+                pv_p_max_pu = pv_p_max_mw / base_MVA
+                return model.PGen[n, i, t] <= pv_p_max_pu
+        else:
+            return pyo.Constraint.Skip
+    
+    model.PV_P_curtailment_con = pyo.Constraint(model.Gens, model.Buses, model.Times, rule=PV_P_curtailment_rule)
+
+    def PV_Q_curtailment_max_rule(model, n, i, t):
+        if Gen_info.loc[n, 'bus'] == i and n in pv_curtailment_df['Gen number'].values:
+            pv_p_max_mw = pv_curtailment_df.loc[pv_curtailment_df['Gen number'] == n, 'PV_max[MW]'].values[0]
+            power_factor = 0.95
+            tan_angle = ((1 - power_factor ** 2) / power_factor) ** 0.5
+            pv_q_max_pu = pv_p_max_mw * tan_angle / base_MVA
+            return model.QGen[n, i, t] <= pv_q_max_pu
+        else:
+            return pyo.Constraint.Skip
+
+    model.PV_Q_curtailment_max_con = pyo.Constraint(model.Gens, model.Buses, model.Times, rule=PV_Q_curtailment_max_rule)
+
+    def PV_Q_curtailment_min_rule(model, n, i, t):
+        if Gen_info.loc[n, 'bus'] == i and n in pv_curtailment_df['Gen number'].values:
+            pv_p_max_mw = pv_curtailment_df.loc[pv_curtailment_df['Gen number'] == n, 'PV_max[MW]'].values[0]
+            power_factor = 0.95
+            tan_angle = ((1 - power_factor ** 2) / power_factor) ** 0.5
+            pv_q_max_pu = pv_p_max_mw * tan_angle / base_MVA
+            return (-1) * pv_q_max_pu <= model.QGen[n, i, t]
+        else:
+            return pyo.Constraint.Skip
+
+    model.PV_Q_curtailment_min_con = pyo.Constraint(model.Gens, model.Buses, model.Times, rule=PV_Q_curtailment_min_rule)
+
+    def PV_S_curtailment_rule(model, n, i, t):
+
+        if Gen_info.loc[n, 'bus'] == i and n in pv_curtailment_df['Gen number'].values:
+            pv_max_mw = pv_curtailment_df[pv_curtailment_df['Gen number'] == n]['PV_max[MW]'].values[0]
+            pv_p_max_pu = pv_max_mw / base_MVA
+
+            power_factor = 0.95
+            tan_angle = ((1 - power_factor ** 2) / power_factor) ** 0.5
+            pv_q_max_mw = pv_max_mw * tan_angle
+            pv_q_max_pu = pv_q_max_mw / base_MVA
+            pv_s_max_pu = (pv_p_max_pu ** 2 + pv_q_max_pu ** 2) ** 0.5
+            
+            pdg_squared = model.PGen[n, i, t] ** 2
+            qdg_squared = model.QGen[n, i, t] ** 2
+            return (pdg_squared + qdg_squared) <= pv_s_max_pu ** 2
+        else:
+            return pyo.Constraint.Skip
+    
+    model.PV_S_curtailment_con = pyo.Constraint(model.Gens, model.Buses, model.Times, rule=PV_S_curtailment_rule)
+
+
     # Expression - Active power expression at each node - Unit:MW
     def P_gen_MW_rule(model, n, i, t):
         return model.PGen[n, i, t] * base_MVA
@@ -796,7 +858,7 @@ def OPF_model_creator_with_switch(np,pyo,base_MVA,Slackbus,Bus_info,Line_info,Lo
     def Q_gen_MVar_rule(model, n, i, t):
         return model.QGen[n, i, t] * base_MVA
     model.Q_gen_MVar = pyo.Expression(model.Gens, model.Buses, model.Times, rule=Q_gen_MVar_rule)
-    
+
     # Equation (6), Unit: [PU]
     def V_limits_rule(model, i,t):
         return (Bus_info['Vmin_pu'][i],model.V_mag[i,t],Bus_info['Vmax_pu'][i])

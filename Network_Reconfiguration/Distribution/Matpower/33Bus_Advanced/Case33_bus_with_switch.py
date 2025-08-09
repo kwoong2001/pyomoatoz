@@ -39,7 +39,7 @@ simul_case = '33bus_MINLP_Opt_problem_for_min_cost_'
 base_MVA = mpc['baseMVA']
     
 # Find slack bus, add distributed generators, set branch status
-[Slackbus, previous_branch_array] = Set_System_Env(np,pd,save_directory,mpc)
+[Slackbus, previous_branch_array, pv_curtailment_df] = Set_System_Env(np,pd,save_directory,mpc)
 
 # Set values and parameters (Bus, Line, Gen, Load, Ymatrix, Time)
 [Bus_info, Line_info, Gen_info, Load_info, Y_mat_info, Time_info]=Set_All_Values(np,pd,save_directory,m,mpc,previous_branch_array, T)
@@ -50,9 +50,9 @@ base_MVA = mpc['baseMVA']
 """
 Create OPF model and Run Pyomo
 """
-
 # OPF Model Create
-model = OPF_model_creator_with_switch(np,pyo,base_MVA,Slackbus,Bus_info,Line_info,Load_info,Gen_info,Time_info,DG_profile_df,Load_profile_df)
+model = OPF_model_creator_with_switch(np,pyo,base_MVA,Slackbus,Bus_info,Line_info,Load_info,Gen_info,Time_info,DG_profile_df,Load_profile_df,pv_curtailment_df)
+
 
 # Create instance for OPF Model
 os.chdir(save_directory)
@@ -85,19 +85,19 @@ print(f'Objective value = {instance.obj(): .4f}')
 P_total = 0
 D_total = 0
 for bus in Bus_info.index:
-    for gen in Gen_info.index:
-        for time in Time_info['Time']:
-            if instance.PGen[gen,bus,time].value >= 1e-4:
-                pgen = instance.PGen[gen,bus,time].value * base_MVA
+    for time in Time_info['Time']:
+        for gen in Gen_info.index:
+            if instance.PGen[gen, bus, time].value >= 1e-4:
+                pgen = instance.PGen[gen, bus, time].value * base_MVA
             else:
                 pgen = 0
             P_total = P_total + pgen
 
-            if instance.PDem[bus,time].expr()>=1e-4:
-                pdem = instance.PDem[bus,time].expr() * base_MVA
-            else:
-                pdem = 0
-            D_total = D_total + pdem
+        if instance.PDem[bus, time].expr() >= 1e-4:
+            pdem = instance.PDem[bus, time].expr() * base_MVA
+        else:
+            pdem = 0
+        D_total = D_total + pdem
     
 
 
@@ -308,72 +308,57 @@ except:
 
 print("solve done!")
 
+# DG list
+dg_list = []
+
+list_dg = pd.read_excel(save_directory + 'DG_Candidates.xlsx', sheet_name='Candidate')
+list_dg_df = pd.DataFrame(list_dg, columns=['Index','Bus number', 'Rating[MW]', 'Type', 'Profile'])
+print(list_dg_df)
 
 # Plotting the network
 excel_path = output_directory + 'Variables/' + simul_case + 'Variables.xlsx'
 line_status_df = pd.read_excel(excel_path, sheet_name='Line_Status')
 
+# line_status_df의 'Index: Lines'를 int로 변환 (혹시 타입이 다를 경우)
+line_status_df['Index: Lines'] = line_status_df['Index: Lines'].astype(int)
+
+
+# merge로 합치기 (left_on: Line_l, right_on: Index: Lines)
+merged_df = pd.merge(Line_info, line_status_df, left_on='Line_l', right_on='Index: Lines', how='left')
+
+# 필요한 컬럼만 추출 (예시: line index, from_bus, to_bus, line status)
+result_df = merged_df[['Index: Lines', 'from_bus', 'to_bus', 'Value']].copy()
+result_df = result_df.rename(columns={'Index: Lines': 'line_index', 'Value': 'line_status'})
+
+result_df.to_excel(os.path.join(output_directory, "result_df.xlsx"), index=False)
+print(result_df)
+
 line_pairs = []
-for _, row in line_status_df.iterrows():
-    # Value가 1인 라인만 추가
-    if int(row['Value']) == 1:
-        idx = row['Index: Lines']
-        from_bus = int(Line_info.loc[idx, 'from_bus'])
-        to_bus = int(Line_info.loc[idx, 'to_bus'])
+for i in range(len(line_status_df)):
+    if line_status_df.loc[i, 'Value'] == 1:
+        line_idx = line_status_df.loc[i, 'Index: Lines']
+        from_bus = int(Line_info.loc[line_idx, 'from_bus'])
+        to_bus = int(Line_info.loc[line_idx, 'to_bus'])
         line_pairs.append((from_bus, to_bus))
 
-# 버스 위치(x, y)
-pos = {
-    1: (0, 1),
-    2: (0, 2),
-    3: (0, 3),
-    4: (0, 4),
-    5: (0, 5),
-    6: (0, 6),
-    7: (0, 7),
-    8: (0, 8),
-    9: (0, 9),
-    10: (0, 10),
-    11: (0, 11),
-    12: (0, 12),
-    13: (0, 13),
-    14: (0, 14),
-    15: (0, 15),
-    16: (0, 16),
-    17: (0, 17),
-    18: (0, 18),
+# 버스 위치 정보 불러오기 (sheet 이름 명시)
+bus_pos_df = pd.read_excel(os.path.join(save_directory, "System.xlsx"), sheet_name="33bus", usecols=["Bus", "x", "y"])
 
-    19: (-2, 4),
-    20: (-2, 5),
-    21: (-2, 6),
-    22: (-2, 7),
-
-    23: (4, 5),
-    24: (4, 6),
-    25: (4, 7),
-
-    26: (2, 7),
-    27: (2, 8),
-    28: (2, 9),
-    29: (2, 10),
-    30: (2, 11),
-    31: (2, 12),
-    32: (2, 13),
-    33: (2, 14),
-}
-
+pos = {}
+for i in range(len(bus_pos_df)):
+    bus = int(bus_pos_df.loc[i, "Bus"])
+    x = bus_pos_df.loc[i, "x"]
+    y = bus_pos_df.loc[i, "y"]
+    pos[bus] = (x, y)
 # 선로(from, to)
 branches = line_pairs
-
-# 회전
-rotated_pos = {bus: (y, x) for bus, (x, y) in pos.items()}
 
 fig, ax = plt.subplots(figsize=(12, 10))
 
 
 for i, (from_bus, to_bus) in enumerate(branches):
-    from_x, from_y = rotated_pos[from_bus]
-    to_x, to_y = rotated_pos[to_bus]
+    from_x, from_y = pos[from_bus]
+    to_x, to_y = pos[to_bus]
 
     # y좌표가 같고 x좌표 차이가 2 이상인 경우
     if from_y == to_y and abs(from_x - to_x) >= 2:
@@ -394,8 +379,8 @@ for i, (from_bus, to_bus) in enumerate(branches):
         ax.plot([from_x, to_x], [from_y, to_y], color='black', linewidth=1)
 
 # 모선 (점) 그리기
-for bus, (x, y) in rotated_pos.items():
-    ax.plot(x, y, 'o', color='black', markersize=8)  # 점으로 표시
+for bus, (x, y) in pos.items():
+    ax.plot(x, y, 'o', color='black', markersize=5)  # 점으로 표시
     ax.text(x + 0.25, y - 0.3, str(bus), ha='center', va='top')
 
 ax.set_aspect('equal')

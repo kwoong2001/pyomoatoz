@@ -15,8 +15,10 @@ def Set_System_Env(np,pd,save_directory,mpc):
     
     # Distributed generators 추가
     add_distributed_gen(np,pd,save_directory,mpc)
+
+    pv_curtailment_df = set_pv_curtailment(np,pd,save_directory)
     
-    return Slackbus, previous_branch_array
+    return Slackbus, previous_branch_array, pv_curtailment_df
 
 ## Find Slackbus
 def find_slack(mpc):    
@@ -78,3 +80,11 @@ def add_distributed_gen(np,pd,save_directory,mpc):
         # 데이터 추가 (행 방향으로, axis=0)
         mpc['gen'] = np.vstack([mpc['gen'], tmp_gen[dg]])
         mpc['gencost'] = np.vstack([mpc['gencost'], tmp_gen_cost])
+
+def set_pv_curtailment(np,pd,save_directory):
+
+
+    pv_curtailment_df = pd.read_csv(save_directory + 'PV_Curtailment.csv')
+
+
+    return pv_curtailment_df
