@@ -794,59 +794,59 @@ def OPF_model_creator_with_switch(np,pyo,base_MVA,Slackbus,Bus_info,Line_info,Lo
     3 Constraints
     """
 
-    def PV_P_curtailment_rule(model, n, i, t):
-        if Gen_info.loc[n, 'bus'] == i and n in pv_curtailment_df['Gen number'].values:
-                pv_p_max_mw = pv_curtailment_df.loc[pv_curtailment_df['Gen number'] == n, 'PV_max[MW]'].values[0]
-                pv_p_max_pu = pv_p_max_mw / base_MVA
-                return model.PGen[n, i, t] <= pv_p_max_pu
-        else:
-            return pyo.Constraint.Skip
+    # def PV_P_curtailment_rule(model, n, i, t):
+    #     if Gen_info.loc[n, 'bus'] == i and n in pv_curtailment_df['Gen number'].values:
+    #             pv_p_max_mw = pv_curtailment_df.loc[pv_curtailment_df['Gen number'] == n, 'PV_max[MW]'].values[0]
+    #             pv_p_max_pu = pv_p_max_mw / base_MVA
+    #             return model.PGen[n, i, t] <= pv_p_max_pu
+    #     else:
+    #         return pyo.Constraint.Skip
     
-    model.PV_P_curtailment_con = pyo.Constraint(model.Gens, model.Buses, model.Times, rule=PV_P_curtailment_rule)
+    # model.PV_P_curtailment_con = pyo.Constraint(model.Gens, model.Buses, model.Times, rule=PV_P_curtailment_rule)
 
-    def PV_Q_curtailment_max_rule(model, n, i, t):
-        if Gen_info.loc[n, 'bus'] == i and n in pv_curtailment_df['Gen number'].values:
-            pv_p_max_mw = pv_curtailment_df.loc[pv_curtailment_df['Gen number'] == n, 'PV_max[MW]'].values[0]
-            power_factor = 0.95
-            tan_angle = ((1 - power_factor ** 2) / power_factor) ** 0.5
-            pv_q_max_pu = pv_p_max_mw * tan_angle / base_MVA
-            return model.QGen[n, i, t] <= pv_q_max_pu
-        else:
-            return pyo.Constraint.Skip
+    # def PV_Q_curtailment_max_rule(model, n, i, t):
+    #     if Gen_info.loc[n, 'bus'] == i and n in pv_curtailment_df['Gen number'].values:
+    #         pv_p_max_mw = pv_curtailment_df.loc[pv_curtailment_df['Gen number'] == n, 'PV_max[MW]'].values[0]
+    #         power_factor = 0.95
+    #         tan_angle = ((1 - power_factor ** 2) / power_factor) ** 0.5
+    #         pv_q_max_pu = pv_p_max_mw * tan_angle / base_MVA
+    #         return model.QGen[n, i, t] <= pv_q_max_pu
+    #     else:
+    #         return pyo.Constraint.Skip
 
-    model.PV_Q_curtailment_max_con = pyo.Constraint(model.Gens, model.Buses, model.Times, rule=PV_Q_curtailment_max_rule)
+    # model.PV_Q_curtailment_max_con = pyo.Constraint(model.Gens, model.Buses, model.Times, rule=PV_Q_curtailment_max_rule)
 
-    def PV_Q_curtailment_min_rule(model, n, i, t):
-        if Gen_info.loc[n, 'bus'] == i and n in pv_curtailment_df['Gen number'].values:
-            pv_p_max_mw = pv_curtailment_df.loc[pv_curtailment_df['Gen number'] == n, 'PV_max[MW]'].values[0]
-            power_factor = 0.95
-            tan_angle = ((1 - power_factor ** 2) / power_factor) ** 0.5
-            pv_q_max_pu = pv_p_max_mw * tan_angle / base_MVA
-            return (-1) * pv_q_max_pu <= model.QGen[n, i, t]
-        else:
-            return pyo.Constraint.Skip
+    # def PV_Q_curtailment_min_rule(model, n, i, t):
+    #     if Gen_info.loc[n, 'bus'] == i and n in pv_curtailment_df['Gen number'].values:
+    #         pv_p_max_mw = pv_curtailment_df.loc[pv_curtailment_df['Gen number'] == n, 'PV_max[MW]'].values[0]
+    #         power_factor = 0.95
+    #         tan_angle = ((1 - power_factor ** 2) / power_factor) ** 0.5
+    #         pv_q_max_pu = pv_p_max_mw * tan_angle / base_MVA
+    #         return (-1) * pv_q_max_pu <= model.QGen[n, i, t]
+    #     else:
+    #         return pyo.Constraint.Skip
 
-    model.PV_Q_curtailment_min_con = pyo.Constraint(model.Gens, model.Buses, model.Times, rule=PV_Q_curtailment_min_rule)
+    # model.PV_Q_curtailment_min_con = pyo.Constraint(model.Gens, model.Buses, model.Times, rule=PV_Q_curtailment_min_rule)
 
-    def PV_S_curtailment_rule(model, n, i, t):
+    # def PV_S_curtailment_rule(model, n, i, t):
 
-        if Gen_info.loc[n, 'bus'] == i and n in pv_curtailment_df['Gen number'].values:
-            pv_max_mw = pv_curtailment_df[pv_curtailment_df['Gen number'] == n]['PV_max[MW]'].values[0]
-            pv_p_max_pu = pv_max_mw / base_MVA
+    #     if Gen_info.loc[n, 'bus'] == i and n in pv_curtailment_df['Gen number'].values:
+    #         pv_max_mw = pv_curtailment_df[pv_curtailment_df['Gen number'] == n]['PV_max[MW]'].values[0]
+    #         pv_p_max_pu = pv_max_mw / base_MVA
 
-            power_factor = 0.95
-            tan_angle = ((1 - power_factor ** 2) / power_factor) ** 0.5
-            pv_q_max_mw = pv_max_mw * tan_angle
-            pv_q_max_pu = pv_q_max_mw / base_MVA
-            pv_s_max_pu = (pv_p_max_pu ** 2 + pv_q_max_pu ** 2) ** 0.5
+    #         power_factor = 0.95
+    #         tan_angle = ((1 - power_factor ** 2) / power_factor) ** 0.5
+    #         pv_q_max_mw = pv_max_mw * tan_angle
+    #         pv_q_max_pu = pv_q_max_mw / base_MVA
+    #         pv_s_max_pu = (pv_p_max_pu ** 2 + pv_q_max_pu ** 2) ** 0.5
             
-            pdg_squared = model.PGen[n, i, t] ** 2
-            qdg_squared = model.QGen[n, i, t] ** 2
-            return (pdg_squared + qdg_squared) <= pv_s_max_pu ** 2
-        else:
-            return pyo.Constraint.Skip
+    #         pdg_squared = model.PGen[n, i, t] ** 2
+    #         qdg_squared = model.QGen[n, i, t] ** 2
+    #         return (pdg_squared + qdg_squared) <= pv_s_max_pu ** 2
+    #     else:
+    #         return pyo.Constraint.Skip
     
-    model.PV_S_curtailment_con = pyo.Constraint(model.Gens, model.Buses, model.Times, rule=PV_S_curtailment_rule)
+    # model.PV_S_curtailment_con = pyo.Constraint(model.Gens, model.Buses, model.Times, rule=PV_S_curtailment_rule)
 
 
     # Expression - Active power expression at each node - Unit:MW

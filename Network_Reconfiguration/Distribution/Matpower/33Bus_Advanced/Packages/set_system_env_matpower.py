@@ -71,15 +71,15 @@ def add_distributed_gen(np,pd,save_directory,mpc):
         tmp_gen = new_gen.copy()
         tmp_gen_cost = new_cost.copy()
         
-        tmp_gen[dg][0] = df_dg_candidates.loc[dg,'Bus number']
-        tmp_gen[dg][3] = df_dg_candidates.loc[dg,'Q_Control_Factor']*df_dg_candidates.loc[dg,'Rating[MW]'] #Qmax
-        tmp_gen[dg][4] = (-1)*df_dg_candidates.loc[dg,'Q_Control_Factor']*df_dg_candidates.loc[dg,'Rating[MW]'] #Qmin
-        tmp_gen[dg][8] = df_dg_candidates.loc[dg,'Rating[MW]']
+        tmp_gen[0][0] = df_dg_candidates.loc[dg,'Bus number']
+        tmp_gen[0][3] = df_dg_candidates.loc[dg,'Q_Control_Factor']*df_dg_candidates.loc[dg,'Rating[MW]'] #Qmax
+        tmp_gen[0][4] = (-1)*df_dg_candidates.loc[dg,'Q_Control_Factor']*df_dg_candidates.loc[dg,'Rating[MW]'] #Qmin
+        tmp_gen[0][8] = df_dg_candidates.loc[dg,'Rating[MW]']
         
         # 기존 mpc['gen'], mpc['gencost']가 numpy array임을 가정하고,
         # 데이터 추가 (행 방향으로, axis=0)
-        mpc['gen'] = np.vstack([mpc['gen'], tmp_gen[dg]])
-        mpc['gencost'] = np.vstack([mpc['gencost'], tmp_gen_cost])
+        mpc['gen'] = np.vstack([mpc['gen'], tmp_gen[0]])
+        mpc['gencost'] = np.vstack([mpc['gencost'], tmp_gen_cost[0]])
 
 def set_pv_curtailment(np,pd,save_directory):
 
