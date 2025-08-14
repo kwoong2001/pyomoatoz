@@ -45,6 +45,19 @@ base_MVA = mpc['baseMVA']
 # Set values and parameters (Bus, Line, Gen, Load, Ymatrix, Time)
 [Bus_info, Line_info, Gen_info, Load_info, Y_mat_info, Time_info]=Set_All_Values(np,pd,save_directory,m,mpc,previous_branch_array, T)
 
+#임시로 발전기 p_min_mw 설정
+# slack bus의 발전기만, 나머지는 기존 값 유지
+new_p_min_mw = []
+for i in range(len(Gen_info)):
+    bus_num = Gen_info['bus'].iloc[i]
+    if bus_num == Slackbus:
+        new_p_min_mw.append(0)
+    else:
+        new_p_min_mw.append(Gen_info['min_p_mw'].iloc[i])
+Gen_info['min_p_mw'] = new_p_min_mw
+
+print(Gen_info)
+
 # Set profiles of distributed generators and load
 [DG_profile_df, Load_profile_df] = Set_Resource_Profiles(np,pd,save_directory,T,Load_info)
 
@@ -326,36 +339,6 @@ VAR_XLSX = os.path.join(output_directory, "Variables", f"{simul_case}Variables.x
 LINE_INFO = os.path.join(save_directory, "Line_info.csv")
 SYSTEM_XLSX = os.path.join(save_directory, "System.xlsx")
 OUT_PNG = os.path.join(output_directory, "33bus_tree_layout.png")
-
-# ===================== PDg와 PGen의 차이 출력 (0이 아닌 값만, instance 기반) =====================
-# instance.PGen, instance.PDg에서 Gens, Buses, Times별로 값 비교
-
-diff_rows = []
-for key in instance.PGen:
-    pgen_val = instance.PGen[key].value
-    try:
-        pdg_val = instance.PDg[key].expr()
-    except KeyError:
-        continue  # PDg에 없는 조합은 스킵
-    diff = pgen_val - pdg_val
-    # slack bus는 제외
-    if (abs(diff) > 1e-6) and ((pgen_val > 0) or (pdg_val > 0)) and (key[1] != Slackbus):
-        # key: (gen, bus, time)
-        diff_rows.append({
-            "Gens": key[0],
-            "Buses": key[1],
-            "Times": key[2],
-            "Value_PGen": pgen_val,
-            "Value_PDg": pdg_val,
-            "Diff": diff
-        })
-
-if not diff_rows:
-    print("PGen과 PDg의 차이가 0이 아닌 값이 없습니다.")
-else:
-    df_diff = pd.DataFrame(diff_rows)
-    print("=== Gens, Buses, Times별 PGen, PDg, Diff (Value>0, Diff≠0) ===")
-    print(df_diff.to_string(index=False))
 
 # ===================== 데이터 로드 =====================
 # 1) Line_Status: 활성 선로 플래그

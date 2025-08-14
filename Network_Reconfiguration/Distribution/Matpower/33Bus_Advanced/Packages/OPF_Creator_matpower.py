@@ -788,11 +788,25 @@ def OPF_model_creator_with_switch(np,pyo,base_MVA,Slackbus,Bus_info,Line_info,Lo
             return model.QGen[n, i, t] <= 0
     model.Q_gen_max_con = pyo.Constraint(model.Gens, model.Buses, model.Times, rule=Q_gen_max_rule)
 
-    
     """
-    Constraints - PV Curtailments
-    3 Constraints
+    Expressions - Curtailment
     """
+
+    # Expression - PV curtailment - Unit:MW
+    def PV_curtailment_rule(model, n, i, t):
+        if Gen_info.loc[n, 'bus'] == i:
+            if i == Slackbus:
+                return 0
+            else:
+                return (model.PDg[n, i, t] - model.PGen[n, i, t]) * base_MVA
+        else:
+            return 0
+    model.PV_curtailment_value = pyo.Expression(model.Gens, model.Buses, model.Times, rule=PV_curtailment_rule)
+
+    # """
+    # Constraints - PV Curtailments
+    # 3 Constraints
+    # """
 
     # def PV_P_curtailment_rule(model, n, i, t):
     #     if Gen_info.loc[n, 'bus'] == i and n in pv_curtailment_df['Gen number'].values:
@@ -880,6 +894,10 @@ def OPF_model_creator_with_switch(np,pyo,base_MVA,Slackbus,Bus_info,Line_info,Lo
         return model.V_ang[i,t] * 180 / np.pi
     model.V_ang_deg = pyo.Expression(model.Buses, model.Times, rule=V_ang_deg_rule)
     
+
+
+
+
     """
     Constraints - Currents - Equation (12)-(14)
     1 Constraint
