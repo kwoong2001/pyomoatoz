@@ -5,14 +5,14 @@ Matpower 계통에 자원들 setting
 """
 
 # Matpower Setting 및 정보 추출
-def Set_System_Env(np,pd,save_directory,mpc):
+def Set_System_Env(np,pd,save_directory,mpc,switch):
     
     #Slack 버스 찾기
     Slackbus = find_slack(mpc)
     
     #선로의 초기 상태 저장 및 모든 선로 상태 On으로 변경
-    previous_branch_array = change_line_status(mpc)
-    
+    previous_branch_array = change_line_status(mpc,switch)
+
     # Distributed generators 추가
     add_distributed_gen(np,pd,save_directory,mpc)
 
@@ -33,16 +33,19 @@ def find_slack(mpc):
     return Slackbus
 
 ## Change disconnected line to connected line
-def change_line_status(mpc):
+def change_line_status(mpc,switch):
+    
     ## Change disconnected line to connected line
     previous_branch_array = mpc['branch'].copy()# Save disconnected lines data
     branch_idx = 1
 
-    for branch in mpc['branch']:
-        if branch[-3] == 0:
-            branch[-3] = 1
-            print(f"{branch_idx}-th line(from bus:{branch[0]}, to bus:{branch[1]}) disconnected --> connected")
-        branch_idx +=1
+    if switch == 1:
+        for branch in mpc['branch']:
+            if branch[-3] == 0:
+                branch[-3] = 1
+                print(f"{branch_idx}-th line(from bus:{branch[0]}, to bus:{branch[1]}) disconnected --> connected")
+            branch_idx +=1
+
     
     return previous_branch_array
 

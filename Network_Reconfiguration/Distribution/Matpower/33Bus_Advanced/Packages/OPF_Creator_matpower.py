@@ -56,7 +56,11 @@ def OPF_model_creator_without_switch(np,pyo,base_MVA,Slackbus,Bus_info,Line_info
 
     model.Bus_G = pyo.Param(model.Buses,model.Buses,within=pyo.Any) # Network conductivity matrix
     model.Bus_B = pyo.Param(model.Buses,model.Buses,within=pyo.Any) # Network susceptance matrix
-    
+
+    def Line_Status_info(model,l):
+        return Line_info.loc[l,'in_service']
+    model.Line_Status = pyo.Var(model.Lines, within=pyo.Binary, rule = Line_Status_info)  # Line status (1: On, 0: Off)
+
     #Demand at each node in time t - Unit:PU
     def P_demand_rule(model,i,t):
         return sum(Load_profile_df.loc[d,'p_mw_'+str(t)]/base_MVA for d in model.Loads if Load_info.loc[d,'bus']==i)
@@ -282,6 +286,32 @@ def OPF_model_creator_without_switch(np,pyo,base_MVA,Slackbus,Bus_info,Line_info
             return model.QGen[n, i, t] <= 0
     model.Q_gen_max_con = pyo.Constraint(model.Gens, model.Buses, model.Times, rule=Q_gen_max_rule)
 
+    """
+    Expressions - Curtailment
+    """
+
+    # Expression - PV curtailment - Unit:MW
+    def PV_curtailment_rule(model, n, i, t):
+        if Gen_info.loc[n, 'bus'] == i:
+            if i == Slackbus:
+                return 0
+            else:
+                return (model.PDg[n, i, t] - model.PGen[n, i, t]) * base_MVA
+        else:
+            return 0
+    model.PV_curtailment_value = pyo.Expression(model.Gens, model.Buses, model.Times, rule=PV_curtailment_rule)
+
+    """
+    Expression - Net load
+    """
+
+    def Net_load_rule(model, i, t):
+        return model.PDem[i, t] - sum(model.PGen[n, i, t] for n in model.Gens if Gen_info.loc[n, 'bus'] == i)
+    
+    model.Net_load = pyo.Expression(model.Buses, model.Times, rule=Net_load_rule)
+
+
+    
     # Expression - Active power expression at each node - Unit:MW
     def P_gen_MW_rule(model, n, i, t):
         return model.PGen[n, i, t] * base_MVA
@@ -391,7 +421,7 @@ def OPF_model_creator_without_switch(np,pyo,base_MVA,Slackbus,Bus_info,Line_info
 
 
 # Line 상태를 반영할 수 있는 OPF 함수
-def OPF_model_creator_with_switch(np,pyo,base_MVA,Slackbus,Bus_info,Line_info,Load_info,Gen_info,Time_info,DG_profile_df,Load_profile_df,pv_curtailment_df):
+def OPF_model_creator_with_switch(np,pyo,base_MVA,Slackbus,Bus_info,Line_info,Load_info,Gen_info,Time_info,DG_profile_df,Load_profile_df):
 
     model = pyo.AbstractModel() #dat 파일을 무조건 사용해야 함
 
@@ -803,6 +833,31 @@ def OPF_model_creator_with_switch(np,pyo,base_MVA,Slackbus,Bus_info,Line_info,Lo
             return 0
     model.PV_curtailment_value = pyo.Expression(model.Gens, model.Buses, model.Times, rule=PV_curtailment_rule)
 
+    """
+    Expression - Net load
+    """
+
+    # Expression - Net load - Unit: MW
+    def Net_load_rule(model, i, t):
+        return (model.PDem[i, t] - sum(model.PGen[n, i, t] for n in model.Gens if Gen_info.loc[n, 'bus'] == i)) * base_MVA
+    
+    model.Net_load = pyo.Expression(model.Buses, model.Times, rule=Net_load_rule)
+
+    """
+    Expression - Net Power Flow
+    """
+
+    # Expression - Net P Power Flow - Unit: MW
+    def Net_P_power_flow_rule(model, l, t):
+        return (model.P_line_flow_sending[l, t] - model.P_line_flow_receiving[l, t])
+    model.Net_P_power_flow = pyo.Expression(model.Lines, model.Times, rule=Net_P_power_flow_rule)
+
+    def Net_Q_power_flow_rule(model, l, t):
+        return (model.Q_line_flow_sending[l, t] - model.Q_line_flow_receiving[l, t])
+    model.Net_Q_power_flow = pyo.Expression(model.Lines, model.Times, rule=Net_Q_power_flow_rule)
+
+
+
     # """
     # Constraints - PV Curtailments
     # 3 Constraints
@@ -876,6 +931,7 @@ def OPF_model_creator_with_switch(np,pyo,base_MVA,Slackbus,Bus_info,Line_info,Lo
     # Equation (6), Unit: [PU]
     def V_limits_rule(model, i,t):
         return (Bus_info['Vmin_pu'][i],model.V_mag[i,t],Bus_info['Vmax_pu'][i])
+        # return (0.5,model.V_mag[i,t],1.5)
     model.V_limits_con = pyo.Constraint(model.Buses, model.Times, rule=V_limits_rule)
     
     def Slack_con_rule(model, i, t):
