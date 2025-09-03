@@ -56,6 +56,7 @@ def Set_Bus(pd,save_directory,mpc):
         Bus_info.loc[bus_idx,'zone'] = bus[10]
         Bus_info.loc[bus_idx,'Vmax_pu'] = bus[11]
         Bus_info.loc[bus_idx,'Vmin_pu'] = bus[12]
+        Bus_info.loc[bus_idx,'Type'] = int(bus[1])
         bus_idx +=1
 
     tmp = Bus_info['Buses']

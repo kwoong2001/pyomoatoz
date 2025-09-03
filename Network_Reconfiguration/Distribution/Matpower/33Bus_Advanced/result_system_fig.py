@@ -4,44 +4,57 @@ import numpy as np
 from collections import defaultdict, deque, Counter
 import matplotlib as mpl
 import matplotlib.pyplot as plt
-from config import switch
+from config import switch, dg_case, pv_penetration
 
 ## Set directory
 save_directory = os.path.dirname(__file__) + "/Pre_cal_data/"       # Set save parameter directory
 output_directory = os.path.dirname(__file__) + "/Output_data/"     # Set output directory
 
-if switch == 1:
-    simul_case = '33bus_MINLP_Opt_problem_for_min_cost_with_switch_'
-elif switch == 0:
-    simul_case = '33bus_MINLP_Opt_problem_for_min_cost_without_switch_'
+if dg_case == 'none':
+    if switch == 1:
+        simul_case = '33bus_MINLP_Opt_problem_for_min_cost_with_switch_' + dg_case + '_dgs_'
+    elif switch == 0:
+        simul_case = '33bus_MINLP_Opt_problem_for_min_cost_without_switch_' + dg_case + '_dgs_'
+else:
+    if switch == 1:
+        simul_case = '33bus_MINLP_Opt_problem_for_min_cost_with_switch_' + dg_case + '_dgs_' + str(pv_penetration) + '_pv_penetration_'
+    elif switch == 0:
+        simul_case = '33bus_MINLP_Opt_problem_for_min_cost_without_switch_' + dg_case + '_dgs_' + str(pv_penetration) + '_pv_penetration_'
 
 # DG list
 dg_list = []
 
-list_dg = pd.read_excel(save_directory + 'DG_Candidates.xlsx', sheet_name='Candidate')
-list_dg_df = pd.DataFrame(list_dg, columns=['Index','Bus number', 'Rating[MW]', 'Type', 'Profile'])
-print(list_dg_df)
+if dg_case == 'none':
+    dg_bus_list = []
+else:
+    list_dg = pd.read_excel(save_directory + f'DG_Candidates_{dg_case}.xlsx', sheet_name='Candidate')
+    list_dg_df = pd.DataFrame(list_dg, columns=['Index','Bus number', 'Rating[MW]', 'Type', 'Profile'])
+    print(list_dg_df)
+    dg_bus_list = list(list_dg_df['Bus number'].astype(int).unique())
 
 # Ensure output subdirectories exist
 os.makedirs(os.path.join(output_directory, "Variables"), exist_ok=True)
 os.makedirs(os.path.join(output_directory, "Dual"), exist_ok=True)
 
 # ====== 추가: Figure 저장 폴더 생성 ======
-output_fig_directory = os.path.join(output_directory, "Figures")
+output_fig_directory = os.path.join(output_directory, "Figures", simul_case + "Fig")
 os.makedirs(output_fig_directory, exist_ok=True)
 
 VAR_XLSX = os.path.join(output_directory, "Variables", f"{simul_case}Variables.xlsx")
 LINE_INFO = os.path.join(save_directory, "Line_info.csv")
 SYSTEM_XLSX = os.path.join(save_directory, "System.xlsx")
-if switch == 1:
-    OUT_PNG_NL = os.path.join(output_fig_directory, "33bus_tree_layout_Netload_with_switch.png")
-elif switch == 0:
-    OUT_PNG_NL = os.path.join(output_fig_directory, "33bus_tree_layout_Netload_without_switch.png")
 
-if switch == 1:
-    OUT_PNG_V = os.path.join(output_fig_directory, "33bus_tree_layout_Vmag_with_switch.png")
-elif switch == 0:
-    OUT_PNG_V = os.path.join(output_fig_directory, "33bus_tree_layout_Vmag_without_switch.png")
+OUT_PNG_NL = os.path.join(output_fig_directory, f"Tree_layout_Netload.png")
+OUT_PNG_V = os.path.join(output_fig_directory, f"Tree_layout_Vmag.png")
+
+
+bus_info = pd.read_csv(save_directory + 'Bus_info.csv')
+
+for b in bus_info.iterrows():
+    if bus_info.loc[b[0],'Type'] == 3:
+        Slackbus = bus_info.loc[b[0],'Buses']
+
+
 
 # ===================== 데이터 로드 =====================
 # 1) Line_Status: 활성 선로 플래그
@@ -284,7 +297,7 @@ bus_v = {int(row["Index: Buses"]): float(row["Value"]) for _, row in v_row.iterr
 
 v_values = list(bus_v.values())
 vmin, vmax = min(v_values), max(v_values)
-cmap_v = mpl.cm.get_cmap("plasma")
+cmap_v = mpl.colormaps['plasma']
 norm_v = mpl.colors.Normalize(vmin=vmin, vmax=vmax)
 
 # 간선(부모→자식)
@@ -304,9 +317,13 @@ min_v_nodes = [n for n, v in bus_v.items() if v == vmin]
 for n, (xp, yp) in global_pos.items():
     v = bus_v.get(n, vmax)
     color = cmap_v(norm_v(v))
-    ax_v.plot(xp, yp, 'o', color=color, markersize=10, markeredgecolor='black')
+    #ax_v.plot(xp, yp, 'o', color=color, markersize=10, markeredgecolor='black')
+    if n in dg_bus_list:
+        ax_v.plot(xp, yp, 'o', color=color, markersize=12, markeredgecolor='red', zorder=3)
+    else:
+        ax_v.plot(xp, yp, 'o', color=color, markersize=10, markeredgecolor='black', zorder=2)
     ax_v.text(xp, yp - 0.2, str(n), ha='left', va='top', fontweight='bold', fontsize=8)
-    if n in leaf_nodes or n in max_v_nodes or n in min_v_nodes:
+    if n in leaf_nodes or n in max_v_nodes or n in min_v_nodes or n in dg_bus_list:
         text_color = 'blue' if n in max_v_nodes else 'red' if n in min_v_nodes else 'black'
         ax_v.text(xp, yp + 0.15, f"{v:.4f}", ha='center', va='bottom', fontsize=9, color=text_color)
 
@@ -325,6 +342,7 @@ print("Max voltage node(s):", max_v_nodes, f"({vmax:.4f})")
 print("Min voltage node(s):", min_v_nodes, f"({vmin:.4f})")
 
 # ===================== Net_Load 플롯 =====================
+
 fig_nl, ax_nl = plt.subplots(figsize=(12, 8))
 
 NET_LOAD_XLSX = os.path.join(output_directory, "Variables", f"{simul_case}Variables.xlsx")
@@ -341,8 +359,15 @@ if nl_row.empty:
 bus_nl = {int(row["Index: Buses"]): float(row["Value"]) for _, row in nl_row.iterrows()}
 
 nl_values = list(bus_nl.values())
-nlmin, nlmax = min(nl_values), max(nl_values)
-cmap_nl = plt.get_cmap('plasma')
+
+# 슬랙 버스 제외한 넷로드 값으로 컬러맵 범위 설정
+nl_values_wo_slack = [v for n, v in bus_nl.items() if n != Slackbus]
+if nl_values_wo_slack:
+    nlmin, nlmax = min(nl_values_wo_slack), max(nl_values_wo_slack)
+else:
+    nlmin, nlmax = min(nl_values), max(nl_values)
+
+cmap_nl = mpl.colormaps['plasma']
 norm_nl = mpl.colors.Normalize(vmin=nlmin, vmax=nlmax)
 
 for u in all_children:
@@ -352,18 +377,19 @@ for u in all_children:
 
 max_nl_nodes = [n for n, v in bus_nl.items() if np.isclose(v, nlmax, atol=1e-8)]
 min_nl_nodes = [n for n, v in bus_nl.items() if np.isclose(v, nlmin, atol=1e-8)]
-dg_bus_list = list(list_dg_df['Bus number'].astype(int).unique())
 
 for n, (xp, yp) in global_pos.items():
     v = bus_nl.get(n, nlmax)
-    color = cmap_nl(norm_nl(v))
-    if n in dg_bus_list:
-        ax_nl.plot(xp, yp, 'o', color=color, markersize=12, markeredgecolor='blue', zorder=3)
+    if n == Slackbus:
+        ax_nl.plot(xp, yp, 'o', markerfacecolor='black', markeredgecolor='black', markersize=10, zorder=2)
+    elif n in dg_bus_list:
+        ax_nl.plot(xp, yp, 'o', color=cmap_nl(norm_nl(v)), markersize=12, markeredgecolor='red', zorder=3)
     else:
-        ax_nl.plot(xp, yp, 'o', color=color, markersize=10, markeredgecolor='black', zorder=2)
+        ax_nl.plot(xp, yp, 'o', color=cmap_nl(norm_nl(v)), markersize=10, markeredgecolor='black', zorder=2)
     ax_nl.text(xp, yp - 0.2, str(n), ha='left', va='top', fontweight='bold', fontsize=8)
-    text_color = 'red' if n in max_nl_nodes else 'blue' if n in min_nl_nodes else 'black'
-    ax_nl.text(xp, yp + 0.15, f"{v:.4f}", ha='center', va='bottom', fontsize=9, color=text_color)
+    if n in leaf_nodes or n in max_v_nodes or n in min_v_nodes or n in dg_bus_list:
+        text_color = 'red' if n in max_nl_nodes else 'blue' if n in min_nl_nodes else 'black'
+        ax_nl.text(xp, yp + 0.15, f"{v:.4f}", ha='center', va='bottom', fontsize=9, color=text_color)
 
 sm_nl = mpl.cm.ScalarMappable(cmap=cmap_nl, norm=norm_nl)
 sm_nl.set_array([])

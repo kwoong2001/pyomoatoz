@@ -5,19 +5,19 @@
 """
 
 # DG와 Load Profile 생성
-def Set_Resource_Profiles(np,pd,save_directory,T,Load_info):
-    
+def Set_Resource_Profiles(np,pd,save_directory,T,Load_info,dg_case,pv_penetration):
+
     #DG Profile 생성
-    DG_profile_df = DG_profiles(np,pd,save_directory,T)
-    
+    DG_profile_df = DG_profiles(np,pd,save_directory,T,dg_case,Load_info,pv_penetration)
+
     Load_profile_df = Load_Profiles(np,pd,save_directory,T,Load_info)
     
     return DG_profile_df, Load_profile_df
 
-def DG_profiles(np,pd,save_directory,T):
+def DG_profiles(np,pd,save_directory,T,dg_case,Load_info,pv_penetration):
     
     ## Load DG candidates - DG candidate 정보를 불러옴
-    DG_Info_excel_file = save_directory + 'DG_Candidates.xlsx'
+    DG_Info_excel_file = save_directory + f'DG_Candidates_{dg_case}.xlsx'
 
     #'Candidate' 시트에서 후보 발전기들 정보 읽기
     df_dg_candidates = pd.read_excel(DG_Info_excel_file, sheet_name='Candidate')
@@ -29,6 +29,14 @@ def DG_profiles(np,pd,save_directory,T):
         DG_profile_df_columns.append('q_mvar_'+str(t))
     
     DG_profile_df = pd.DataFrame(index = DG_profile_df_index, columns = DG_profile_df_columns)
+
+    total_Pd = Load_info['p_mw'].sum()
+    num_dg = len(df_dg_candidates)
+
+    if num_dg > 0:
+        pv_per_dg = (total_Pd / num_dg) * pv_penetration
+    else:
+        pv_per_dg = 0
     
     # 자원별 Profile 읽기
     df_pv_profiles = pd.read_excel(DG_Info_excel_file, sheet_name='PV_Profile')
@@ -36,14 +44,22 @@ def DG_profiles(np,pd,save_directory,T):
 
     for dg in df_dg_candidates.index:
         DG_profile_df.loc[dg+1,'Gens'] = dg+2 # 1번 Gen은 Slack bus
+        # if df_dg_candidates.loc[dg,'Type'] == 'PV':
+        #     for t in range(1,T+1):
+        #         DG_profile_df.loc[dg+1,'p_mw_'+str(t)] = df_dg_candidates.loc[dg,'Rating[MW]'] * df_pv_profiles.loc[t-1,df_dg_candidates.loc[dg,'Profile']]
+        #         DG_profile_df.loc[dg+1,'q_mvar_'+str(t)] = df_dg_candidates.loc[dg,'Rating[MW]'] * df_pv_profiles.loc[t-1,df_dg_candidates.loc[dg,'Profile']] * df_dg_candidates.loc[dg,'Q_Control_Factor']
+        # elif df_dg_candidates.loc[dg,'Type'] == 'Wind':
+        #     for t in range(1,T+1):
+        #         DG_profile_df.loc[dg+1,'p_mw_'+str(t)] = df_dg_candidates.loc[dg,'Rating[MW]'] * df_wind_profiles.loc[t-1,df_dg_candidates.loc[dg,'Profile']]
+        #         DG_profile_df.loc[dg+1,'q_mvar_'+str(t)] = df_dg_candidates.loc[dg,'Rating[MW]'] * df_wind_profiles.loc[t-1,df_dg_candidates.loc[dg,'Profile']] * df_dg_candidates.loc[dg,'Q_Control_Factor']
         if df_dg_candidates.loc[dg,'Type'] == 'PV':
             for t in range(1,T+1):
-                DG_profile_df.loc[dg+1,'p_mw_'+str(t)] = df_dg_candidates.loc[dg,'Rating[MW]'] * df_pv_profiles.loc[t-1,df_dg_candidates.loc[dg,'Profile']]
-                DG_profile_df.loc[dg+1,'q_mvar_'+str(t)] = df_dg_candidates.loc[dg,'Rating[MW]'] * df_pv_profiles.loc[t-1,df_dg_candidates.loc[dg,'Profile']] * df_dg_candidates.loc[dg,'Q_Control_Factor']
+                DG_profile_df.loc[dg+1,'p_mw_'+str(t)] = pv_per_dg * df_pv_profiles.loc[t-1,df_dg_candidates.loc[dg,'Profile']]
+                DG_profile_df.loc[dg+1,'q_mvar_'+str(t)] = pv_per_dg * df_pv_profiles.loc[t-1,df_dg_candidates.loc[dg,'Profile']] * df_dg_candidates.loc[dg,'Q_Control_Factor']
         elif df_dg_candidates.loc[dg,'Type'] == 'Wind':
             for t in range(1,T+1):
-                DG_profile_df.loc[dg+1,'p_mw_'+str(t)] = df_dg_candidates.loc[dg,'Rating[MW]'] * df_wind_profiles.loc[t-1,df_dg_candidates.loc[dg,'Profile']]
-                DG_profile_df.loc[dg+1,'q_mvar_'+str(t)] = df_dg_candidates.loc[dg,'Rating[MW]'] * df_wind_profiles.loc[t-1,df_dg_candidates.loc[dg,'Profile']] * df_dg_candidates.loc[dg,'Q_Control_Factor']
+                DG_profile_df.loc[dg+1,'p_mw_'+str(t)] = pv_per_dg * df_wind_profiles.loc[t-1,df_dg_candidates.loc[dg,'Profile']]
+                DG_profile_df.loc[dg+1,'q_mvar_'+str(t)] = pv_per_dg * df_wind_profiles.loc[t-1,df_dg_candidates.loc[dg,'Profile']] * df_dg_candidates.loc[dg,'Q_Control_Factor']
     
     DG_profile_df = DG_profile_df.set_index('Gens')
                 

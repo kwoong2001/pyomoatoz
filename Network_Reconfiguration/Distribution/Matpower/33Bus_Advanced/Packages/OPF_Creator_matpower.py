@@ -306,7 +306,7 @@ def OPF_model_creator_without_switch(np,pyo,base_MVA,Slackbus,Bus_info,Line_info
     """
 
     def Net_load_rule(model, i, t):
-        return model.PDem[i, t] - sum(model.PGen[n, i, t] for n in model.Gens if Gen_info.loc[n, 'bus'] == i)
+        return (model.PDem[i, t] - sum(model.PGen[n, i, t] for n in model.Gens if Gen_info.loc[n, 'bus'] == i)) * base_MVA
     
     model.Net_load = pyo.Expression(model.Buses, model.Times, rule=Net_load_rule)
 

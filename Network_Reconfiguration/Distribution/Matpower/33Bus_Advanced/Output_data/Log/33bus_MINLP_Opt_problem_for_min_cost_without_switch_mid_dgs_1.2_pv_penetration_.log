@@ -1,0 +1,82 @@
+Solver command line: ['C:\\Program Files\\Artelys\\Knitro 14.2.0\\knitroampl\\knitroampl.exe', 'C:\\Users\\HP\\AppData\\Local\\Temp\\tmp7h_av9by.pyomo.nl', '-AMPL', 'mip_multistart=1', 'mip_numthreads=1']
+
+Artelys Knitro 14.2.0: mip_multistart=1
+mip_numthreads=1
+
+=======================================
+          Commercial License
+         Artelys Knitro 14.2.0
+=======================================
+
+Knitro using up to 16 threads.
+Knitro presolve eliminated 7852 variables and 18960 constraints.
+
+concurrent_evals         0
+datacheck                0
+findiff_numthreads       1
+hessian_no_f             1
+hessopt                  1
+mip_multistart           1
+mip_numthreads           1
+Knitro fixing 7852 variables eliminated from the presolve.
+
+Problem Characteristics                                 (   Presolved)
+-----------------------
+Objective goal:  Minimize
+Objective type:  linear
+Number of variables:                               9504 (        1652)
+    bounded below only:                             792 (           0)
+    bounded above only:                               0 (           0)
+    bounded below and above:                          0 (        1652)
+    fixed:                                            0 (           0)
+    free:                                          8712 (           0)
+Number of constraints:                            19008 (        1584)
+    linear equalities:                               48 (           0)
+    quadratic equalities:                             0 (           0)
+    gen. nonlinear equalities:                     1584 (        1584)
+    linear one-sided inequalities:                15840 (           0)
+    quadratic one-sided inequalities:                 0 (           0)
+    gen. nonlinear one-sided inequalities:            0 (           0)
+    linear two-sided inequalities:                 1536 (           0)
+    quadratic two-sided inequalities:                 0 (           0)
+    gen. nonlinear two-sided inequalities:            0 (           0)
+Number of nonzeros in Jacobian:                   34656 (        9236)
+Number of nonzeros in Hessian:                     5448 (        5280)
+
+Knitro using the Interior-Point/Barrier Direct algorithm.
+
+  Iter      Objective      FeasError   OptError    ||Step||    CGits 
+--------  --------------  ----------  ----------  ----------  -------
+       0    0.000000e+00   1.055e-01
+      10    3.006378e+02   4.012e-02   3.575e-01   6.518e-03        0
+      20    3.855839e+02   2.682e-02   6.091e+02   2.384e-03        0
+      30    4.335153e+02   1.874e-02   9.894e+00   9.417e-02        0
+      40    5.470958e+02   1.576e-02   1.000e+02   1.068e-01        0
+      50    5.609543e+02   6.754e-02   1.000e+02   1.840e-02        0
+      60    5.550918e+02   5.124e-02   1.000e+02   7.822e-02        0
+      70    5.609417e+02   6.759e-02   1.000e+02   2.298e-05        0
+      80    5.349038e+02   2.429e-02   1.000e+02   1.684e-01        0
+      90    2.140814e+03   1.792e-01   1.000e+02   2.635e+00        0
+     100    5.607946e+02   6.753e-02   1.000e+02   7.936e-03        0
+     105    5.609417e+02   6.759e-02   1.000e+02   2.298e-05        0
+
+EXIT: Convergence to an infeasible point. Problem appears to be locally
+      infeasible. If problem is believed to be feasible, try multistart 
+      to search for feasible points, or decrease infeastol.
+
+Final Statistics
+----------------
+Final objective value               =   5.60941691271034e+02
+Final feasibility error (abs / rel) =   6.76e-02 / 6.76e-02
+Final optimality error  (abs / rel) =   1.00e+02 / 1.00e+00
+# of iterations                     =        105 
+# of CG iterations                  =         31 
+# of function evaluations           =        130
+# of gradient evaluations           =        118
+# of Hessian evaluations            =        106
+Total program time (secs)           =       0.849 (    13.250 CPU time)
+Time spent in evaluations (secs)    =       0.229
+
+===============================================================================
+
+

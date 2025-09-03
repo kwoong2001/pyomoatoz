@@ -4,8 +4,7 @@ Matpower 계통에 자원들 setting
 - Distributed Generators
 """
 
-# Matpower Setting 및 정보 추출
-def Set_System_Env(np,pd,save_directory,mpc,switch):
+def Set_System_Env(np,pd,save_directory,mpc,switch,dg_case,pv_penetration):
     
     #Slack 버스 찾기
     Slackbus = find_slack(mpc)
@@ -14,7 +13,7 @@ def Set_System_Env(np,pd,save_directory,mpc,switch):
     previous_branch_array = change_line_status(mpc,switch)
 
     # Distributed generators 추가
-    add_distributed_gen(np,pd,save_directory,mpc)
+    add_distributed_gen(np,pd,save_directory,mpc,dg_case,pv_penetration)
 
     pv_curtailment_df = set_pv_curtailment(np,pd,save_directory)
     
@@ -49,7 +48,7 @@ def change_line_status(mpc,switch):
     
     return previous_branch_array
 
-def add_distributed_gen(np,pd,save_directory,mpc):
+def add_distributed_gen(np,pd,save_directory,mpc,dg_case,pv_penetration):
     
     ## Add unit gen - Matpower Generator 형식에 맞는 기본 발전기 데이터 불러오기
     Unit_DG_excel_file = save_directory + 'Basic_DG_Data.xlsx'
@@ -65,19 +64,42 @@ def add_distributed_gen(np,pd,save_directory,mpc):
     new_cost = df_cost.to_numpy().astype(float)
 
     ## Add DG candidates - DG candidate 정보를 불러온 후 Matpower 형식에 맞게 변환
-    DG_Info_excel_file = save_directory + 'DG_Candidates.xlsx'
+    DG_Info_excel_file = save_directory + f'DG_Candidates_{dg_case}.xlsx'
 
     #'Candidate' 시트에서 후보 발전기들 정보 읽기
     df_dg_candidates = pd.read_excel(DG_Info_excel_file, sheet_name='Candidate')
+
+    mat_bus_info_columns = ['bus_i', 'type', 'Pd', 'Qd', 'Gs', 'Bs', 'area','Vm', 'Va', 'baseKV', 'zoen', 'Vmax', 'Vmin']
+    mat_bus_info = pd.DataFrame(mpc['bus'], columns = mat_bus_info_columns)
+
+    Load_index =range(1, mat_bus_info.shape[0] + 1)
+    Load_column = ['bus', 'p_mw', 'q_mvar']
+    Load_info = pd.DataFrame(index=Load_index, columns = Load_column)
+
+    Load_info['bus'] = mat_bus_info['bus_i'].astype(int).values
+    Load_info['p_mw'] = mat_bus_info['Pd'].values
+    Load_info['q_mvar'] = mat_bus_info['Qd'].values
+
+    total_Pd = Load_info['p_mw'].sum()
+    num_dg = len(df_dg_candidates)
+
+    if num_dg > 0:
+        pv_per_dg = (total_Pd / num_dg) * pv_penetration
+    else:
+        pv_per_dg = 0
 
     for dg in df_dg_candidates.index:
         tmp_gen = new_gen.copy()
         tmp_gen_cost = new_cost.copy()
         
         tmp_gen[0][0] = df_dg_candidates.loc[dg,'Bus number']
-        tmp_gen[0][3] = df_dg_candidates.loc[dg,'Q_Control_Factor']*df_dg_candidates.loc[dg,'Rating[MW]'] #Qmax
-        tmp_gen[0][4] = (-1)*df_dg_candidates.loc[dg,'Q_Control_Factor']*df_dg_candidates.loc[dg,'Rating[MW]'] #Qmin
-        tmp_gen[0][8] = df_dg_candidates.loc[dg,'Rating[MW]']
+        # tmp_gen[0][3] = df_dg_candidates.loc[dg,'Q_Control_Factor']*df_dg_candidates.loc[dg,'Rating[MW]'] #Qmax
+        # tmp_gen[0][4] = (-1)*df_dg_candidates.loc[dg,'Q_Control_Factor']*df_dg_candidates.loc[dg,'Rating[MW]'] #Qmin
+        # tmp_gen[0][8] = df_dg_candidates.loc[dg,'Rating[MW]']
+
+        tmp_gen[0][3] = df_dg_candidates.loc[dg,'Q_Control_Factor']*pv_per_dg #Qmax
+        tmp_gen[0][4] = (-1)*df_dg_candidates.loc[dg,'Q_Control_Factor']*pv_per_dg #Qmin
+        tmp_gen[0][8] = pv_per_dg
         
         # 기존 mpc['gen'], mpc['gencost']가 numpy array임을 가정하고,
         # 데이터 추가 (행 방향으로, axis=0)

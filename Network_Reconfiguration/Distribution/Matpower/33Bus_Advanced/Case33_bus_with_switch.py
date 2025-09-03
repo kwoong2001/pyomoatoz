@@ -18,7 +18,7 @@ from pyomo import environ as pym
 from matpower import start_instance
 from oct2py import octave
 from collections import defaultdict, deque, Counter
-from config import switch
+from config import switch, dg_case, pv_penetration
 
 """
 Set model and parameters with Matpower
@@ -35,11 +35,16 @@ T = 24
 m = start_instance()
 mpc = m.loadcase('case33bw')
 
-
-if switch == 1:
-    simul_case = '33bus_MINLP_Opt_problem_for_min_cost_with_switch_'
-elif switch == 0:
-    simul_case = '33bus_MINLP_Opt_problem_for_min_cost_without_switch_'
+if dg_case == 'none':
+    if switch == 1:
+        simul_case = '33bus_MINLP_Opt_problem_for_min_cost_with_switch_' + dg_case + '_dgs_'
+    elif switch == 0:
+        simul_case = '33bus_MINLP_Opt_problem_for_min_cost_without_switch_' + dg_case + '_dgs_'
+else:
+    if switch == 1:
+        simul_case = '33bus_MINLP_Opt_problem_for_min_cost_with_switch_' + dg_case + '_dgs_' + str(pv_penetration) + '_pv_penetration_'
+    elif switch == 0:
+        simul_case = '33bus_MINLP_Opt_problem_for_min_cost_without_switch_' + dg_case + '_dgs_' + str(pv_penetration) + '_pv_penetration_'
 
 print(simul_case)
 
@@ -47,13 +52,15 @@ print(simul_case)
 base_MVA = mpc['baseMVA']
     
 # Find slack bus, add distributed generators, set branch status
-[Slackbus, previous_branch_array, pv_curtailment_df] = Set_System_Env(np,pd,save_directory,mpc,switch)
+[Slackbus, previous_branch_array, pv_curtailment_df] = Set_System_Env(np,pd,save_directory,mpc,switch,dg_case,pv_penetration)
 
 # Set values and parameters (Bus, Line, Gen, Load, Ymatrix, Time)
 [Bus_info, Line_info, Gen_info, Load_info, Y_mat_info, Time_info]=Set_All_Values(np,pd,save_directory,m,mpc,previous_branch_array, T)
 
+print(Gen_info)
+
 # Set profiles of distributed generators and load
-[DG_profile_df, Load_profile_df] = Set_Resource_Profiles(np,pd,save_directory,T,Load_info)
+[DG_profile_df, Load_profile_df] = Set_Resource_Profiles(np,pd,save_directory,T,Load_info,dg_case,pv_penetration)
 
 """
 Create OPF model and Run Pyomo
@@ -77,50 +84,15 @@ print('Initializing OPF model...')
 
 #KNITRO Solver 이용
 optimizer = pyo.SolverFactory('knitroampl',executable='C:/Program Files/Artelys/Knitro 14.2.0/knitroampl/knitroampl.exe')
-# optimizer.options['mip_multistart'] = 1
-# optimizer.options['mip_numthreads'] = 1
-# instance.dual = pyo.Suffix(direction=pyo.Suffix.IMPORT)
-# Problem = optimizer.solve(instance,tee=True,logfile="solver_logging.log")
-
-# ---- 안정화 1차 세트 ----
-optimizer.options['mip_numthreads']   = 1
-optimizer.options['mip_method']       = 1      # 1=NLPBB, 2=MISQP
-optimizer.options['mip_opt_gap_rel']  = 1e-3
-
-# 컷/휴리스틱 보수화 (이름 주의!)
-optimizer.options['mip_cutting_plane']      = 0   # 컷 절차 비활성
-optimizer.options['mip_cutfactor']          = 0   # 노드당 컷 한도 0
-optimizer.options['mip_gomory']             = 0
-optimizer.options['mip_mir']                = 0
-optimizer.options['mip_knapsack']           = 0
-optimizer.options['mip_liftproject']        = 0
-optimizer.options['mip_clique']             = 0
-optimizer.options['mip_cut_probing']        = 0
-
-optimizer.options['mip_heuristic_strategy'] = 0   # 휴리스틱 전체 off
-optimizer.options['mip_heuristic_feaspump'] = 0
-optimizer.options['mip_heuristic_diving']   = 0
-optimizer.options['mip_heuristic_localsearch'] = 0
-optimizer.options['mip_heuristic_lns']      = 0
-optimizer.options['mip_heuristic_misqp']    = 0
-optimizer.options['mip_heuristic_mpec']     = 0
-
-# Knitro 프리솔브(AMPL 프리솔브가 아니라 Knitro 쪽)
-optimizer.options['presolve']         = 1        # 필요시 0으로도 테스트
-
-optimizer.options['mip_numthreads']    = 1     # 경쟁상태 예방
-
-optimizer.options['mip_opt_gap_rel']   = 1e-3  # 0% 근처 종료 시 크래시 우회
-
-
+optimizer.options['mip_multistart'] = 1
+optimizer.options['mip_numthreads'] = 1
 instance.dual = pyo.Suffix(direction=pyo.Suffix.IMPORT)
+# Create Log directory if it doesn't exist
+log_dir = os.path.join(output_directory, "Log")
+os.makedirs(log_dir, exist_ok=True)
+log_path = os.path.join(log_dir, simul_case + ".log")
 
-Problem = optimizer.solve(
-    instance, tee=True,
-    logfile="solver_logging.log",
-    keepfiles=True,
-    symbolic_solver_labels=True
-)
+Problem = optimizer.solve(instance, tee=True, logfile=log_path)
 
 print('Solving OPF model...')
 
@@ -130,7 +102,8 @@ Result
 """
 
 print('----------------------------------------------------------------')
-print(f'Objective value = {instance.obj(): .4f}')
+Objective_value = instance.obj()
+print(f'Objective value = {Objective_value: .4f}')
 P_total = 0
 D_total = 0
 for bus in Bus_info.index:
@@ -177,6 +150,7 @@ print('OPF Model total load MW:', D_total)
 # print('Matpower total gen MW:', matpower_gen_mw_total)
 # print('----------------------------------------------------------------')
 # print('Difference total gen MW:', P_total - (matpower_gen_mw_total))
+
 P_loss_total = 0
 
 for line in Line_info.index:
@@ -345,6 +319,13 @@ with pd.ExcelWriter(output_directory+'Variables/'+ simul_case +'Variables.xlsx')
         except:
             df.to_excel(writer, sheet_name='Variable_list',index=False)
 
+    # 결과값(result) 시트 저장
+    opf_result = pd.DataFrame({
+    'Name': ['Objective_value', 'P_total', 'D_total', 'P_loss_total'],
+    'Value': [Objective_value, P_total, D_total, P_loss_total]
+    })
+    opf_result.to_excel(writer, sheet_name='result', index=False)
+
 try:
     with pd.ExcelWriter(output_directory+'Dual/'+ simul_case +'Dual_Variables.xlsx') as writer:  
         for df in dual_var_df_list:
@@ -354,5 +335,7 @@ try:
                 df.to_excel(writer, sheet_name='Constraint_list',index=False)
 except:
     print('Check Dual')
+
+
 
 print("solve done!")
