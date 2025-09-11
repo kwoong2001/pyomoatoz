@@ -654,18 +654,18 @@ def OPF_model_creator_with_switch(np,pyo,base_MVA,Slackbus,Bus_info,Line_info,Lo
     1 Constraints
     """
     # Equation (25)
-    def Line_status_time_interval_rule(model, l, ta):
-       return sum(model.Line_Status[l, h] for h in range(1 + (ta-1)*Ta, ta*Ta + 1)) == model.Line_Status[l, 1 + (ta-1)*Ta] * Ta
-    model.Line_Status_time_interval_con = pyo.Constraint(model.Lines, model.TimeIntervals, rule=Line_status_time_interval_rule)
+    # def Line_status_time_interval_rule(model, l, ta):
+    #    return sum(model.Line_Status[l, h] for h in range(1 + (ta-1)*Ta, ta*Ta + 1)) == model.Line_Status[l, 1 + (ta-1)*Ta] * Ta
+    # model.Line_Status_time_interval_con = pyo.Constraint(model.Lines, model.TimeIntervals, rule=Line_status_time_interval_rule)
     
     # Equation (26) - use if Equation (25) not works
-    # def Line_status_time_interval_rule2(model, l, t):
-    #    for ta in range(1, Tp+1):
-    #        if (t >= 1 +(ta-1)*Ta) and (t<ta*Ta):
-    #            return model.Line_Status[l, t+1] == model.Line_Status[l, t]
-    #        else:
-    #            return model.Line_Status[l, t] <= 1
-    # model.Line_Status_time_interval_con2 = pyo.Constraint(model.Lines, model.Times, rule=Line_status_time_interval_rule2)
+    def Line_status_time_interval_rule2(model, l, t):
+       for ta in range(1, Tp+1):
+           if (t >= 1 +(ta-1)*Ta) and (t<ta*Ta):
+               return model.Line_Status[l, t+1] == model.Line_Status[l, t]
+           else:
+               return model.Line_Status[l, t] <= 1
+    model.Line_Status_time_interval_con2 = pyo.Constraint(model.Lines, model.Times, rule=Line_status_time_interval_rule2)
     
     
     """
