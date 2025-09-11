@@ -18,7 +18,7 @@ from pyomo import environ as pym
 from matpower import start_instance
 from oct2py import octave
 from collections import defaultdict, deque, Counter
-from config import switch, dg_case, pv_penetration
+from config import *
 
 """
 Set model and parameters with Matpower
@@ -28,21 +28,19 @@ Set model and parameters with Matpower
 save_directory = os.path.dirname(__file__) + "/Pre_cal_data/"       # Set save parameter directory
 output_directory = os.path.dirname(__file__) + "/Output_data/"     # Set output directory
 
-# Set time
-T = 24
-
 # Set and load Matpower case
 m = start_instance()
 mpc = m.loadcase('case33bw')
 
+
 if dg_case == 'none':
     if switch == 1:
-        simul_case = '33bus_MINLP_Opt_problem_for_min_cost_with_switch_' + dg_case + '_dgs_'
+        simul_case = '33bus_MINLP_Opt_problem_for_min_cost_with_switch_' + dg_case + '_dgs_' + str(Ta) + '_interval_'
     elif switch == 0:
         simul_case = '33bus_MINLP_Opt_problem_for_min_cost_without_switch_' + dg_case + '_dgs_'
 else:
     if switch == 1:
-        simul_case = '33bus_MINLP_Opt_problem_for_min_cost_with_switch_' + dg_case + '_dgs_' + str(pv_penetration) + '_pv_penetration_'
+        simul_case = '33bus_MINLP_Opt_problem_for_min_cost_with_switch_' + dg_case + '_dgs_' + str(pv_penetration) + '_pv_penetration_' + str(Ta) + '_interval_'
     elif switch == 0:
         simul_case = '33bus_MINLP_Opt_problem_for_min_cost_without_switch_' + dg_case + '_dgs_' + str(pv_penetration) + '_pv_penetration_'
 
@@ -55,7 +53,7 @@ base_MVA = mpc['baseMVA']
 [Slackbus, previous_branch_array, pv_curtailment_df] = Set_System_Env(np,pd,save_directory,mpc,switch,dg_case,pv_penetration)
 
 # Set values and parameters (Bus, Line, Gen, Load, Ymatrix, Time)
-[Bus_info, Line_info, Gen_info, Load_info, Y_mat_info, Time_info]=Set_All_Values(np,pd,save_directory,m,mpc,previous_branch_array, T)
+[Bus_info, Line_info, Gen_info, Load_info, Y_mat_info, Time_info, Time_interval_info]=Set_All_Values(np,pd,save_directory,m,mpc,previous_branch_array,T,Ta,Tp)
 
 print(Gen_info)
 
@@ -67,7 +65,7 @@ Create OPF model and Run Pyomo
 """
 # OPF Model Create
 if switch == 1:
-    model = OPF_model_creator_with_switch(np,pyo,base_MVA,Slackbus,Bus_info,Line_info,Load_info,Gen_info,Time_info,DG_profile_df,Load_profile_df)
+    model = OPF_model_creator_with_switch(np,pyo,base_MVA,Slackbus,Bus_info,Line_info,Load_info,Gen_info,Time_info,Time_interval_info,Ta,Tp,DG_profile_df,Load_profile_df)
 elif switch == 0:
     model = OPF_model_creator_without_switch(np,pyo,base_MVA,Slackbus,Bus_info,Line_info,Load_info,Gen_info,Time_info,DG_profile_df,Load_profile_df)
 

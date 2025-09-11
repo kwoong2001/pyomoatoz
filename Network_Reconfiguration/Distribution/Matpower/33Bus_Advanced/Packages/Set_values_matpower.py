@@ -27,7 +27,7 @@ Set parameters and values
 """
 
 # 선로의 상태를 반영할 수 있는 변수 추가
-def Set_All_Values(np,pd,save_directory,m,mpc,previous_branch_array, T):
+def Set_All_Values(np,pd,save_directory,m,mpc,previous_branch_array, T, Ta, Tp):
     #Bus info
     Bus_info = Set_Bus(pd,save_directory,mpc)
     #Line info
@@ -39,9 +39,10 @@ def Set_All_Values(np,pd,save_directory,m,mpc,previous_branch_array, T):
     # Ymatrix
     Y_mat_info = Creating_Y_matrix(np,pd,save_directory,m,mpc)
     #Time info
-    Time_info = Set_Time(pd,save_directory,T)
+    Time_info, Time_interval_info = Set_Time(pd,save_directory,T,Ta,Tp)
+    #Time interval info
 
-    return Bus_info, Line_info, Gen_info, Load_info, Y_mat_info, Time_info
+    return Bus_info, Line_info, Gen_info, Load_info, Y_mat_info, Time_info, Time_interval_info
 
 
 def Set_Bus(pd,save_directory,mpc):
@@ -223,8 +224,12 @@ def Set_Line(pd,save_directory,m,mpc,previous_branch_array):
     return Line_info
 
 # Time 에 대한 정보 추가
-def Set_Time(pd,save_directory,T):
+def Set_Time(pd,save_directory,T,Ta,Tp):
     Time_info = pd.DataFrame({'Time': range(1, T+1)})
     Time_info.to_csv(save_directory+'Time_set_for_pyomo.csv', index=False)
-    
-    return Time_info
+
+    # Time_interval_info = pd.DataFrame({'Time_interval': range(1,T+1,Ta)})
+    Time_interval_info = pd.DataFrame({'Time_interval': range(1,Tp+1)})
+    Time_interval_info.to_csv(save_directory+'Time_interval_set_for_pyomo.csv', index=False)
+
+    return Time_info, Time_interval_info

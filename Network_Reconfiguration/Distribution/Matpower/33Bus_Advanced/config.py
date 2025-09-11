@@ -2,9 +2,17 @@ import subprocess
 import os
 import sys
 
-switch = 0 # 1=with switch, 0=without switch
-dg_case = 'end' # 'none', 'mid', 'end'
-pv_penetration = 1.2 # 전체 부하 대비 태양광 발전 비율
+
+T = 24 # 전체 시간
+
+switch = 1 # 1=with switch, 0=without switch
+
+dg_case = 'mid' # 'none', 'mid', 'end'
+
+pv_penetration = 0.8 # 전체 부하 대비 태양광 발전 비율
+
+Ta = 6 # 시간 간격 (시간 단위)
+Tp = T // Ta # 구간 수
 
 base_dir = os.path.dirname(os.path.abspath(__file__))
 

@@ -7,14 +7,14 @@ import matplotlib.pyplot as plt
 
 
 ## Set directory
-save_directory = os.path.dirname(__file__) + "/Pre_cal_data/"       # Set save parameter directory
-output_directory = os.path.dirname(__file__) + "/Output_data/"     # Set output directory
+save_directory = os.path.join(os.path.dirname(__file__), "Pre_cal_data")
+output_directory = os.path.join(os.path.dirname(__file__), "Output_data")
 
 compare_directory = os.path.join(output_directory, "Compare")
 os.makedirs(compare_directory, exist_ok=True)
 
 switch = 1
-pv_penetration = 0.2
+pv_penetration = 0.6
 Time = 15
 
 def get_simul_case_names(switch, pv_penetration):
@@ -34,8 +34,27 @@ VAR_XLSX_n = os.path.join(output_directory, "Variables", f"{simul_case_n}Variabl
 VAR_XLSX_m = os.path.join(output_directory, "Variables", f"{simul_case_m}Variables.xlsx")
 VAR_XLSX_e = os.path.join(output_directory, "Variables", f"{simul_case_e}Variables.xlsx")
 
-LINE_INFO = os.path.join(save_directory, "Line_info.csv")
-SYSTEM_XLSX = os.path.join(save_directory, "System.xlsx")
+Leaf_csv_n = os.path.join(output_directory, "Figures", simul_case_n + "leaf_nodes.csv")
+Leaf_csv_m = os.path.join(output_directory, "Figures", simul_case_m + "leaf_nodes.csv")
+Leaf_csv_e = os.path.join(output_directory, "Figures", simul_case_e + "leaf_nodes.csv")
+
+leaf_nodes_n = pd.read_csv(Leaf_csv_n)['leaf_node'].tolist()
+leaf_nodes_m = pd.read_csv(Leaf_csv_m)['leaf_node'].tolist()
+leaf_nodes_e = pd.read_csv(Leaf_csv_e)['leaf_node'].tolist()
+
+list_dg_xlsx_n = pd.read_excel(os.path.join(save_directory, 'DG_Candidates_none.xlsx'), sheet_name='Candidate')
+list_dg_xlsx_m = pd.read_excel(os.path.join(save_directory, 'DG_Candidates_mid.xlsx'), sheet_name='Candidate')
+list_dg_xlsx_e = pd.read_excel(os.path.join(save_directory, 'DG_Candidates_end.xlsx'), sheet_name='Candidate')
+
+list_dg_n = pd.DataFrame(list_dg_xlsx_n, columns=['Index','Bus number', 'Rating[MW]', 'Type', 'Profile'])
+dg_bus_list_n = list(list_dg_n['Bus number'].astype(int).unique())
+
+list_dg_m = pd.DataFrame(list_dg_xlsx_m, columns=['Index','Bus number', 'Rating[MW]', 'Type', 'Profile'])
+dg_bus_list_m = list(list_dg_m['Bus number'].astype(int).unique())
+
+list_dg_e = pd.DataFrame(list_dg_xlsx_e, columns=['Index','Bus number', 'Rating[MW]', 'Type', 'Profile'])
+dg_bus_list_e = list(list_dg_e['Bus number'].astype(int).unique())
+
 
 def load_variable_sheets(file_path):
 
@@ -110,6 +129,38 @@ plt.figure(figsize=(10, 6))
 plt.plot(df_time['Index: Buses'], df_time['none'], marker='o', label='none')
 plt.plot(df_time['Index: Buses'], df_time['mid'], marker='o', label='mid')
 plt.plot(df_time['Index: Buses'], df_time['end'], marker='o', label='end')
+
+# leaf_nodes 및 DG bus 각각 표시
+# none
+for i, leaf in enumerate(leaf_nodes_n):
+    y = df_time[df_time['Index: Buses'] == leaf]['none']
+    if not y.empty:
+        plt.scatter(leaf, y, color='g', marker='s', s=120, label='Leaf Node (none)' if i == 0 else "")
+for i, dg in enumerate(dg_bus_list_n):
+    y = df_time[df_time['Index: Buses'] == dg]['none']
+    if not y.empty:
+        plt.scatter(dg, y, color='g', marker='o', s=120, label='DG Bus (none)' if i == 0 else "")
+
+# mid
+for i, leaf in enumerate(leaf_nodes_m):
+    y = df_time[df_time['Index: Buses'] == leaf]['mid']
+    if not y.empty:
+        plt.scatter(leaf, y, color='b', marker='s', s=120, label='Leaf Node (mid)' if i == 0 else "")
+for i, dg in enumerate(dg_bus_list_m):
+    y = df_time[df_time['Index: Buses'] == dg]['mid']
+    if not y.empty:
+        plt.scatter(dg, y, color='b', marker='o', s=120, label='DG Bus (mid)' if i == 0 else "")
+
+# end
+for i, leaf in enumerate(leaf_nodes_e):
+    y = df_time[df_time['Index: Buses'] == leaf]['end']
+    if not y.empty:
+        plt.scatter(leaf, y, color='r', marker='s', s=120, label='Leaf Node (end)' if i == 0 else "")
+for i, dg in enumerate(dg_bus_list_e):
+    y = df_time[df_time['Index: Buses'] == dg]['end']
+    if not y.empty:
+        plt.scatter(dg, y, color='r', marker='o', s=120, label='DG Bus (end)' if i == 0 else "")
+
 plt.xlabel('Bus')
 plt.ylabel('Vmag')
 plt.title(f'Vmag_with_switch_{pv_penetration}_pv_penetration_{Time}_h')
