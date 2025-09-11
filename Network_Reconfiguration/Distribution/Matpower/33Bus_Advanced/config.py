@@ -11,7 +11,7 @@ dg_case = 'mid' # 'none', 'mid', 'end'
 
 pv_penetration = 0.8 # 전체 부하 대비 태양광 발전 비율
 
-Ta = 6 # 시간 간격 (시간 단위)
+Ta = 24 # 시간 간격 (시간 단위)
 Tp = T // Ta # 구간 수
 
 base_dir = os.path.dirname(os.path.abspath(__file__))

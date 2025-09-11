@@ -473,16 +473,6 @@ def OPF_model_creator_with_switch(np,pyo,base_MVA,Slackbus,Bus_info,Line_info,Lo
     model.QDg = pyo.Expression(model.Gens, model.Buses,model.Times, rule = Q_dg_rule)
     
     #Fictious load at each bus in time t - UnitPU (22)(23)
-    # def Fictious_load_rule(model,i,t):
-    #     if Slackbus != i:
-    #         if i in list(Gen_info['bus']):
-    #             return 1
-    #         else:
-    #             return 0
-    #     else:
-    #         return (-1)*(len(Gen_info['bus'])-1) # Slack bus 제외
-    # model.FLoad = pyo.Expression(model.Buses, model.Times, rule = Fictious_load_rule)
-    
     def Fictious_load_rule(model,i):
         if Slackbus != i:
             if i in list(Gen_info['bus']):
@@ -505,16 +495,13 @@ def OPF_model_creator_with_switch(np,pyo,base_MVA,Slackbus,Bus_info,Line_info,Lo
     model.QGen = pyo.Var(model.Gens, model.Buses, model.Times, within=pyo.Reals, initialize=0.0)
     
     #Line status variable
-    # model.Line_Status = pyo.Var(model.Lines, model.Times, within=pyo.Integers, bounds=(0, 1),initialize = 1)    
     model.Line_Status = pyo.Var(model.Lines, model.Times, within=pyo.Integers, bounds=(0, 1),initialize = 1)    
     
     #Transfer bus status variable
-    # model.Transfer_bus_Status = pyo.Var(model.Buses, model.Times, within=pyo.Integers, bounds=(0, 1),initialize = 1)
-    model.Transfer_bus_Status = pyo.Var(model.Buses, within=pyo.Integers, bounds=(0, 1),initialize = 1)
+    model.Transfer_bus_Status = pyo.Var(model.Buses, model.TimeIntervals, within=pyo.Integers, bounds=(0, 1),initialize = 1)
     
     #Fictious flow
-    # model.Fictious_flow = pyo.Var(model.Lines, model.Times, within=pyo.Reals, initialize = 0.0)        
-    model.Fictious_flow = pyo.Var(model.Lines, within=pyo.Reals, initialize = 0.0)        
+    model.Fictious_flow = pyo.Var(model.Lines, model.TimeIntervals, within=pyo.Reals, initialize = 0.0)        
     
     """
     Expressions - Flow - Equation
@@ -550,13 +537,14 @@ def OPF_model_creator_with_switch(np,pyo,base_MVA,Slackbus,Bus_info,Line_info,Lo
                 - model.Bus_B[i, j] * model.V_mag[i, t] * model.V_mag[j, t] * pyo.cos(model.V_ang[i, t] - model.V_ang[j, t]))
     model.Q_line_flow_receiving = pyo.Expression(model.Lines, model.Times, rule=Q_line_flow_receiving_rule)
 
-    # Equation (9?)
+    # Equation (9)-left
     def S_line_flow_sending_rule(model, l, t):
         i = Line_info.loc[l, 'from_bus']
         j = Line_info.loc[l, 'to_bus']
         return model.P_line_flow_sending[l, t] ** 2 + model.Q_line_flow_sending[l, t] ** 2
     model.S_line_flow_sending = pyo.Expression(model.Lines, model.Times, rule=S_line_flow_sending_rule)
 
+    # Equation (9)-right
     if 1==0:
         def S_line_flow_sending_con_rule(model, l, t):
             i = Line_info.loc[l, 'from_bus']
@@ -565,15 +553,16 @@ def OPF_model_creator_with_switch(np,pyo,base_MVA,Slackbus,Bus_info,Line_info,Lo
             if Line_info.loc[l, 'rate_MVA'] == 0:
                 return pyo.Constraint.Skip
             else:
-                return model.S_line_flow_sending[l, t] <= model.Line_Status[l] * (Line_info.loc[l, 'rate_MVA'] / base_MVA) ** 2
+                return model.S_line_flow_sending[l, t] <= model.Line_Status[l,t] * (Line_info.loc[l, 'rate_MVA'] / base_MVA) ** 2
         model.S_line_flow_sending_con = pyo.Constraint(model.Lines, model.Times, rule=S_line_flow_sending_con_rule)
-
+        
+    # Equation (9)-left
     def S_line_flow_receiving_rule(model, l, t):
         i = Line_info.loc[l, 'from_bus']
         j = Line_info.loc[l, 'to_bus']
         return model.P_line_flow_receiving[l, t] ** 2 + model.Q_line_flow_receiving[l, t] ** 2
     model.S_line_flow_receiving = pyo.Expression(model.Lines, model.Times, rule=S_line_flow_receiving_rule)
-
+    # Equation (9)-right
     if 1==0:
         def S_line_flow_receiving_con_rule(model, l, t):
             i = Line_info.loc[l, 'from_bus']
@@ -582,174 +571,103 @@ def OPF_model_creator_with_switch(np,pyo,base_MVA,Slackbus,Bus_info,Line_info,Lo
             if Line_info.loc[l, 'rate_MVA'] == 0:
                 return pyo.Constraint.Skip
             else:
-                return model.S_line_flow_receiving[l, t] <= model.Line_Status[l] * (Line_info.loc[l, 'rate_MVA'] / base_MVA) ** 2
+                return model.S_line_flow_receiving[l, t] <= model.Line_Status[l,t] * (Line_info.loc[l, 'rate_MVA'] / base_MVA) ** 2
         model.S_line_flow_receiving_con = pyo.Constraint(model.Lines, model.Times, rule=S_line_flow_receiving_con_rule)
     
     """
     Line status
     1 Constraints
     """
-    ##Line status constraint
-    #def Line_status_rule(model,l,t):
-    #    if t > 1:
-    #        return model.Line_Status[l,t] == model.Line_Status[l,t-1]                   
-    #    else:
-    #        return model.Line_Status[l,t] <= 1
-    #model.Line_Status_con = pyo.Constraint(model.Lines, model.Times,rule = Line_status_rule)
-    
     ##Line status constraint  (10)
     def Line_status_rule(model,l,t):
         return model.Line_Status[l,t] <= 1
     model.Line_Status_con = pyo.Constraint(model.Lines, model.Times, rule = Line_status_rule)
 
-    # def Line_status_time_interval_rule(model, l, ta):
-    #     ta = 1
-    #     return sum(model.Line_Status[l, h] for h in range(ta, ta + Ta)) == model.Line_Status[l, ta] * Ta
-    # model.Line_Status_time_interval_con = pyo.Constraint(model.Lines, model.TimeIntervals, rule=Line_status_time_interval_rule)
-    
-    
-    
-
-    def Line_status_time_interval_rule(model, l, ta):
-        return sum(model.Line_Status[l, h] for h in range(ta, ta + Ta)) == model.Line_Status[l, ta] * Ta
-    model.Line_Status_time_interval_con = pyo.Constraint(model.Lines, model.TimeIntervals, rule=Line_status_time_interval_rule)
-
-    # def Line_status_time_interval_rule(model, l, t):
-    #     intervals = Time_interval_info['Time_interval'].tolist()
-    #     t_start = max([v for v in intervals if v <= t], default=None)
-    #     t_end = t_start + Ta
-    #     if t in range(t_start, t_end):
-    #         if t == t_start:
-    #             return pyo.Constraint.Skip
-    #         else:
-    #             return model.Line_Status[l, t] == model.Line_Status[l, t_start]
-    # model.Line_Status_time_interval_con = pyo.Constraint(model.Lines, model.Times, rule=Line_status_time_interval_rule)
     """
     Radiality constraint - Transfer bus status
     4 Constraints
     """
     ##Transfer bus constraint 1 (15)
-    # def Transfer_rule1(model,l,t):
-    #     i = Line_info.loc[l, 'from_bus']
-    #     j = Line_info.loc[l, 'to_bus']
-        
-    #     if Bus_info.loc[i,"Transfer_Bus"] == 1:
-    #         return model.Line_Status[l,t] <= model.Transfer_bus_Status[i,t]
-    #     else:
-    #         return pyo.Constraint.Skip
-                        
-    # model.Transfer_rule1_con = pyo.Constraint(model.Lines, model.Times,rule = Transfer_rule1)
-    
-    def Transfer_rule1(model,l):
+    def Transfer_rule1(model,l,ta):
         i = Line_info.loc[l, 'from_bus']
         j = Line_info.loc[l, 'to_bus']
         
         if Bus_info.loc[i,"Transfer_Bus"] == 1:
-            return model.Line_Status[l] <= model.Transfer_bus_Status[i]
+            return model.Line_Status[l,1+(ta-1)*Ta] <= model.Transfer_bus_Status[i,ta]
         else:
             return pyo.Constraint.Skip
-    model.Transfer_rule1_con = pyo.Constraint(model.Lines, rule = Transfer_rule1)
+                        
+    model.Transfer_rule1_con = pyo.Constraint(model.Lines, model.TimeIntervals,rule = Transfer_rule1)
     
     ##Transfer bus constraint 2 (16)
-    def Transfer_rule2(model,l,t):
+    def Transfer_rule2(model,l,ta):
         i = Line_info.loc[l, 'from_bus']
         j = Line_info.loc[l, 'to_bus']
         
         if Bus_info.loc[j,"Transfer_Bus"] == 1:
-            return model.Line_Status[l,t] <= model.Transfer_bus_Status[j,t]
+            return model.Line_Status[l,1+(ta-1)*Ta] <= model.Transfer_bus_Status[j,ta]
         else:
             return pyo.Constraint.Skip
                         
-    model.Transfer_rule2_con = pyo.Constraint(model.Lines, model.Times,rule = Transfer_rule2)
-    
-    # def Transfer_rule2(model,l):
-    #     i = Line_info.loc[l, 'from_bus']
-    #     j = Line_info.loc[l, 'to_bus']
-        
-    #     if Bus_info.loc[j,"Transfer_Bus"] == 1:
-    #         return model.Line_Status[l] <= model.Transfer_bus_Status[j]
-    #     else:
-    #         return pyo.Constraint.Skip
-                        
-    # model.Transfer_rule2_con = pyo.Constraint(model.Lines,rule = Transfer_rule2)
+    model.Transfer_rule2_con = pyo.Constraint(model.Lines, model.TimeIntervals,rule = Transfer_rule2)
     
     ##Transfer bus constraint 3 (17)
-    def Transfer_rule3(model,i,t):
+    def Transfer_rule3(model,i,ta):
         
         if Bus_info.loc[i,"Transfer_Bus"] == 1:
             return (
-                sum(model.Line_Status[l,t]
+                sum(model.Line_Status[l,1+(ta-1)*Ta]
                 for l in Line_info.index if Line_info.loc[l, "from_bus"] == i )
-                + sum( model.Line_Status[l,t]
+                + sum( model.Line_Status[l,1+(ta-1)*Ta]
                 for l in Line_info.index if Line_info.loc[l, "to_bus"] == i)
-                >= 2*model.Transfer_bus_Status[i,t]
+                >= 2*model.Transfer_bus_Status[i,ta]
             )
         else:
             return pyo.Constraint.Skip
-    model.Transfer_rule3_con = pyo.Constraint(model.Buses, model.Times,rule = Transfer_rule3)
-    
-    # def Transfer_rule3(model,i):
-        
-    #     if Bus_info.loc[i,"Transfer_Bus"] == 1:
-    #         return (
-    #             sum(model.Line_Status[l]
-    #             for l in Line_info.index if Line_info.loc[l, "from_bus"] == i )
-    #             + sum( model.Line_Status[l]
-    #             for l in Line_info.index if Line_info.loc[l, "to_bus"] == i)
-    #             >= 2*model.Transfer_bus_Status[i]
-    #         )
-    #     else:
-    #         return pyo.Constraint.Skip
-    # model.Transfer_rule3_con = pyo.Constraint(model.Buses,rule = Transfer_rule3)
+    model.Transfer_rule3_con = pyo.Constraint(model.Buses, model.TimeIntervals,rule = Transfer_rule3)
     
     ##Transfer bus constraint 4 (19)
-    def Transfer_rule4(model,t):
-        return sum(model.Line_Status[l,t] for l in model.Lines) == len(Bus_info) - 1 - sum(1 - model.Transfer_bus_Status[i,t] for i in model.Buses if Bus_info.loc[i,"Transfer_Bus"] == 1)
-    model.Transfer_rule4_con = pyo.Constraint(model.Times,rule = Transfer_rule4)
-    
-    # def Transfer_rule4(model):
-    #     return sum(model.Line_Status[l] for l in model.Lines) == len(Bus_info) - 1 - sum(1 - model.Transfer_bus_Status[i] for i in model.Buses if Bus_info.loc[i,"Transfer_Bus"] == 1)
-    # model.Transfer_rule4_con = pyo.Constraint(rule = Transfer_rule4)
+    def Transfer_rule4(model,ta):
+        return sum(model.Line_Status[l,1+(ta-1)*Ta] for l in model.Lines) == len(Bus_info) - 1 - sum(1 - model.Transfer_bus_Status[i,ta] for i in model.Buses if Bus_info.loc[i,"Transfer_Bus"] == 1)
+    model.Transfer_rule4_con = pyo.Constraint(model.TimeIntervals,rule = Transfer_rule4)
     
     """
     Radiality constraint - Distributed generator, Reactive power generator
     4 Constraints
     """
     ##Fictious flow constraint 1 (20)
-    # def Fictious_flow_rule1(model,i,t):
-    #     return ( sum(model.Fictious_flow[l,t] for l in model.Lines if Line_info.loc[l, "to_bus"] == i) - sum(model.Fictious_flow[l,t] for l in model.Lines if Line_info.loc[l, "from_bus"] == i)) == model.FLoad[i,t]                
-    # model.Fictious_flow_rule1_con = pyo.Constraint(model.Buses, model.Times,rule = Fictious_flow_rule1)
-    
-    def Fictious_flow_rule1(model,i):
-        return ( sum(model.Fictious_flow[l] for l in model.Lines if Line_info.loc[l, "to_bus"] == i) - sum(model.Fictious_flow[l] for l in model.Lines if Line_info.loc[l, "from_bus"] == i)) == model.FLoad[i]                
-    model.Fictious_flow_rule1_con = pyo.Constraint(model.Buses,rule = Fictious_flow_rule1)
+    def Fictious_flow_rule1(model,i,ta):
+        return ( sum(model.Fictious_flow[l,ta] for l in model.Lines if Line_info.loc[l, "to_bus"] == i) - sum(model.Fictious_flow[l,ta] for l in model.Lines if Line_info.loc[l, "from_bus"] == i)) == model.FLoad[i]                
+    model.Fictious_flow_rule1_con = pyo.Constraint(model.Buses, model.TimeIntervals,rule = Fictious_flow_rule1)
     
     ##Fictious flow constraint 2 (24)
-    def Fictious_flow_rule2(model,l,t):
-        return (-1)*(len(Gen_info)-1)*model.Line_Status[l,t] <= model.Fictious_flow[l]
-    model.Fictious_flow_rule2_con = pyo.Constraint(model.Lines, model.Times,rule = Fictious_flow_rule2)
+    def Fictious_flow_rule2(model,l,ta):
+        return (-1)*(len(Gen_info)-1)*model.Line_Status[l,1+(ta-1)*Ta] <= model.Fictious_flow[l,ta]
+    model.Fictious_flow_rule2_con = pyo.Constraint(model.Lines, model.TimeIntervals,rule = Fictious_flow_rule2)
 
-    # def Fictious_flow_rule2(model,l,t):
-    #     return (-1)*(len(Gen_info)-1)*model.Line_Status[l,t] <= model.Fictious_flow[l,t]
-    # model.Fictious_flow_rule2_con = pyo.Constraint(model.Lines, model.Times,rule = Fictious_flow_rule2)
+    def Fictious_flow_rule3(model,l,ta):
+        return model.Fictious_flow[l,ta] <= (len(Gen_info)-1)*model.Line_Status[l,1+(ta-1)*Ta]
+    model.Fictious_flow_rule3_con = pyo.Constraint(model.Lines, model.TimeIntervals,rule = Fictious_flow_rule3)
     
-    # def Fictious_flow_rule2(model,l):
-    #     return (-1)*(len(Gen_info)-1)*model.Line_Status[l] <= model.Fictious_flow[l]
-    # model.Fictious_flow_rule2_con = pyo.Constraint(model.Lines,rule = Fictious_flow_rule2)
+    """
+    Radiality constraint - Maintaining line status
+    1 Constraints
+    """
+    # Equation (25)
+    def Line_status_time_interval_rule(model, l, ta):
+       return sum(model.Line_Status[l, h] for h in range(1 + (ta-1)*Ta, ta*Ta + 1)) == model.Line_Status[l, 1 + (ta-1)*Ta] * Ta
+    model.Line_Status_time_interval_con = pyo.Constraint(model.Lines, model.TimeIntervals, rule=Line_status_time_interval_rule)
     
-    ##Fictious flow constraint 3
-    def Fictious_flow_rule3(model,l,t):
-        return model.Fictious_flow[l] <= (len(Gen_info)-1)*model.Line_Status[l,t]
-    model.Fictious_flow_rule3_con = pyo.Constraint(model.Lines, model.Times,rule = Fictious_flow_rule3)
-
-    # def Fictious_flow_rule3(model,l,t):
-    #     return model.Fictious_flow[l,t] <= (len(Gen_info)-1)*model.Line_Status[l,t]
-    # model.Fictious_flow_rule3_con = pyo.Constraint(model.Lines, model.Times,rule = Fictious_flow_rule3)
+    # Equation (26) - use if Equation (25) not works
+    # def Line_status_time_interval_rule2(model, l, t):
+    #    for ta in range(1, Tp+1):
+    #        if (t >= 1 +(ta-1)*Ta) and (t<ta*Ta):
+    #            return model.Line_Status[l, t+1] == model.Line_Status[l, t]
+    #        else:
+    #            return pyo.Constraint.Skip
+    # model.Line_Status_time_interval_con2 = pyo.Constraint(model.Lines, model.Time, rule=Line_status_time_interval_rule2)
     
-    # def Fictious_flow_rule3(model,l):
-    #     return model.Fictious_flow[l] <= (len(Gen_info)-1)*model.Line_Status[l]
-    # model.Fictious_flow_rule3_con = pyo.Constraint(model.Lines,rule = Fictious_flow_rule3)
-
+    
     """
     Constraints - Load Balance (Generation - Demand) - Equation
     2 Constraints
@@ -812,7 +730,6 @@ def OPF_model_creator_with_switch(np,pyo,base_MVA,Slackbus,Bus_info,Line_info,Lo
             if i == Slackbus:
                 return Gen_info.loc[n, 'min_p_mw'] / base_MVA <= model.PGen[n, i, t]
             else:
-                # return model.PDg[n,i,t] <= model.PGen[n, i, t]
                 return 0 <= model.PGen[n, i, t]
         else:
             return 0 <= model.PGen[n, i, t]
@@ -848,7 +765,6 @@ def OPF_model_creator_with_switch(np,pyo,base_MVA,Slackbus,Bus_info,Line_info,Lo
                 return model.QGen[n, i, t] <= Gen_info.loc[n, 'max_q_mvar'] / base_MVA
             else:
                 return model.QGen[n, i, t] <= model.QDg[n,i,t]
-                #return model.QGen[n, i, t] <= 0
         else:
             return model.QGen[n, i, t] <= 0
     model.Q_gen_max_con = pyo.Constraint(model.Gens, model.Buses, model.Times, rule=Q_gen_max_rule)

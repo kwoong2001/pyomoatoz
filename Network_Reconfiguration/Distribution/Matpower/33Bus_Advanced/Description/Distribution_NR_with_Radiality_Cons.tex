@@ -5,7 +5,7 @@
 
 \title{Network reconfiguration in distribution system with radiality constraints}
 \author{Woong Ko}
-\date{August 02, 2025}
+\date{September 11, 2025}
 
 \begin{document}
 
@@ -15,6 +15,7 @@
 \subsection*{Indices and sets}
 \begin{itemize}
 \item[$t$ / $\mathcal{T}$] Index of time / Set of time steps.
+\item[$t_{a}$ / $\mathcal{T}_{a}$] Index of time interval / Set of time intervals.
 \item[$i, j$ / $\mathcal{N}$] Index of bus / Set of buses.
 \item[$l$ / $\mathcal{L}$] Index of line / Set of lines.
 \item[$dg$ / $\mathcal{G}_{dg}$] Index of distributed generator / Set of distributed generators.
@@ -54,9 +55,9 @@
 \item[$\left|\dot{V}_{i,t} \right|$] Voltage magnitude in bus $i$ at time $t$.
 \item[$\theta_{i,t}$] Voltage phase angle in bus $i$ at time $t$.
 \item[$P_{G_{i},t}$, $Q_{G_{i},t}$] Active and reactive power from generator at bus $i$ at time $t$.
-\item[$x_{ij}$] Circuit that can be reconfigured on line $ij$.
-\item[$y_{i}$] Status of transfer bus in bus $i$.  
-\item[$k_{ij}$] Fictitious flow associated with line $ij$.
+\item[$x_{ij,t}$] Circuit that can be reconfigured on line $ij$ at time $t$.
+\item[$y_{i,t_{a}}$] Status of transfer bus in bus $i$ at time interval $t_{a}$.  
+\item[$k_{ij,t_{a}}$] Fictitious flow associated with line $ij$ at time interval $t_{a}$.
 \end{itemize}
 
 
@@ -76,15 +77,15 @@ General constraints with network, power balance, and switchable lines:
 {\allowdisplaybreaks
 \begin{align}
   \begin{split}
-    P_{G_{i},t} - P_{D_{i,t}} = \sum_{(ij) \in \delta^{-}(i)}x_{ij}P_{ij,t} - \sum_{(ji) \in \delta^{+}(i)}x_{ji}P_{ji,t},
+    P_{G_{i},t} - P_{D_{i,t}} = \sum_{(ij) \in \delta^{-}(i)}x_{ij,t}P_{ij,t} - \sum_{(ji) \in \delta^{+}(i)}x_{ji,t}P_{ji,t},
     \\ \quad \forall i \in \mathcal{N}, \forall t \in \mathcal{T}.
   \end{split}
 \end{align}
 
 \begin{align}
   \begin{split}
-    Q_{G_{i},t} - Q_{D_{i,t}} = \sum_{(ij) \in \delta^{-}(i)}x_{ij}Q_{ij,t} - \sum_{(ji) \in \delta^{+}(i)}x_{ji}Q_{ji,t}  
-    \\- \left|\dot{V}_{i,t} \right|^2(\sum_{(ij) \in \delta^{-}(i)}x_{ij}B^{c}_{ij}/2 +  \sum_{(ji) \in \delta^{+}(i)}x_{ji}B^{c}_{ij}/2)  
+    Q_{G_{i},t} - Q_{D_{i,t}} = \sum_{(ij) \in \delta^{-}(i)}x_{ij,t}Q_{ij,t} - \sum_{(ji) \in \delta^{+}(i)}x_{ji,t}Q_{ji,t}  
+    \\- \left|\dot{V}_{i,t} \right|^2(\sum_{(ij) \in \delta^{-}(i)}x_{ij,t}B^{c}_{ij}/2 +  \sum_{(ji) \in \delta^{+}(i)}x_{ji,t}B^{c}_{ij}/2)  
     \\ \quad \forall i \in \mathcal{N}, \forall t \in \mathcal{T}.
   \end{split}
 \end{align}
@@ -96,7 +97,7 @@ General constraints with network, power balance, and switchable lines:
   \theta_{i,t} = 0, \quad \forall i \in \mathcal{N}_{sb}, \forall t \in \mathcal{T}.\\
   -\pi \leq \theta_{i,t} \leq \pi, \quad \forall i \in \mathcal{N} \setminus \mathcal{N}_{sb}, \forall t \in \mathcal{T}.\\
   P_{ij,t}^{2}+ Q_{ij,t}^{2} \leq x_{ij,t}\overline{S}_{ij}^{2}, \quad   \forall l(ij) \in \mathcal{L}, \forall t \in \mathcal{T}.\\
-  x_{ij} \in \left\{0,1 \right\}, \quad   \forall l(ij) \in \mathcal{L}.
+  x_{ij,t} \in \left\{0,1 \right\}, \quad   \forall l(ij) \in \mathcal{L}, \forall t \in \mathcal{T}.
 \end{align}
 }
 
@@ -136,38 +137,24 @@ Functions (Appendix):
     \\ & \quad \quad  \forall l(ij) \in \mathcal{L}, \forall t \in \mathcal{T}.
   \end{split}
 \end{align}
-
-% \begin{align}
-%   \begin{split}
-%     I_{r_{ij,t}} = &-G_{ij}\left\lvert \dot{V}_{i} \right\rvert \cos{\theta_{i,t}} + B_{ij}\left\lvert \dot{V}_{i} \right\rvert \sin{\theta_{i,t}} \\
-%         &+ G_{ij}\left\lvert \dot{V}_{j} \right\rvert \cos{\theta_{j,t}} - B_{ij}\left\lvert \dot{V}_{j} \right\rvert \sin{\theta_{j,t}}, \forall l \in \mathcal{L}, \forall t \in \mathcal{T}.
-%   \end{split}
-% \end{align}
-
-% \begin{align}
-%   \begin{split}
-%     I_{Im_{ij,t}} = &-B_{ij}\left\lvert \dot{V}_{i} \right\rvert \cos{\theta_{i,t}} - G_{ij}\left\lvert \dot{V}_{i} \right\rvert \sin{\theta_{i,t}} \\
-%     &+ B_{ij}\left\lvert \dot{V}_{j} \right\rvert \cos{\theta_{j,t}} + G_{ij}\left\lvert \dot{V}_{j} \right\rvert \sin{\theta_{j,t}}, \forall l \in \mathcal{L}, \forall t \in \mathcal{T}.
-%   \end{split}
-% \end{align}
 }
 
 - Radiality constraints using transfer buses which don't have distributed generators and demands from \cite{5982115}:
 {\allowdisplaybreaks
 \begin{align}
-  x_{ij} \leq y_{i}, \quad \forall ij \in \delta^{-}(i), i \in \mathcal{N}_{tf}.\\
-  x_{ji} \leq y_{i}, \quad \forall ji \in \delta^{+}(i), i \in \mathcal{N}_{tf}.
+  x_{ij,1+(t_{a}-1)T_{a}} \leq y_{i,t_{a}}, \quad \forall ij \in \delta^{-}(i), i \in \mathcal{N}_{tf}, \forall t_{a} \in \mathcal{T}_{a}.\\
+  x_{ji,1+(t_{a}-1)T_{a}} \leq y_{i,t_{a}}, \quad \forall ji \in \delta^{+}(i), i \in \mathcal{N}_{tf}, \forall t_{a} \in \mathcal{T}_{a}.
 \end{align}
 \begin{align}
   \begin{split}
-    \sum_{(ij) \in \delta^{-}(i)}x_{ij} + \sum_{(ji) \in \delta^{+}(i)}x_{ji} \geq 2y_{i}, 
-    \quad i \in \mathcal{N}_{tf}.
+    \sum_{(ij) \in \delta^{-}(i)}x_{ij,1+(t_{a}-1)T_{a}} + \sum_{(ji) \in \delta^{+}(i)}x_{ji,1+(t_{a}-1)T_{a}} \geq 2y_{i,t_{a}}, 
+    \quad i \in \mathcal{N}_{tf}, \forall _{a} \in \mathcal{T}_{a}.
   \end{split}
 \end{align}
 
 \begin{align}
-  y_{i} \in {0,1}, \quad i \in \mathcal{N}_{tf}.\\
-  \sum_{(ij) \in \mathcal{L}}x_{ij} = n_{b} - n_{sb} - \sum_{j \in \mathcal{N}_{tf}} (1-y_{j}).
+  y_{i,t_{a}} \in {0,1}, \quad i \in \mathcal{N}_{tf}, \forall t_{a} \in \mathcal{T}_{a}.\\
+  \sum_{(ij) \in \mathcal{L}}x_{ij,1+(t_{a}-1)T_{a}} = n_{b} - n_{sb} - \sum_{j \in \mathcal{N}_{tf}} (1-y_{j,t_{a}}), \quad \forall t_{a} \in \mathcal{T}_{a}.
 \end{align}
 }
 
@@ -175,8 +162,8 @@ Functions (Appendix):
 {\allowdisplaybreaks
 \begin{align}
   \begin{split}
-    -K_{i} = \sum_{(ij) \in \delta^{-}(i)} k_{ij} - \sum_{(ji) \in \delta^{+}(i)} k_{ji}, 
-    \quad \forall i \in \mathcal{N}.
+    -K_{i} = \sum_{(ij) \in \delta^{-}(i)} k_{ij,t_{a}} - \sum_{(ji) \in \delta^{+}(i)} k_{ji,t_{a}}, 
+    \quad \forall i \in \mathcal{N}, \quad \forall t_{a} \in \mathcal{T}_{a}.
   \end{split}
 \end{align}
 
@@ -184,9 +171,18 @@ Functions (Appendix):
     K_{i} = -n_{dg}, \quad \forall i \in \mathcal{N}_{sb}. \\
     K_{i} = 1, \quad \forall i \in \mathcal{N}_{dg}. \\
     K_{i} = 0, \quad \forall i \notin \mathcal{N}_{sb} \cup \mathcal{N}_{dg}. \\
-    |k_{ij}| \leq n_{dg} x_{ij}, \quad \forall (ij) \in \mathcal{L}. 
+    |k_{ij,t_{a}}| \leq n_{dg} x_{ij,1+(t_{a}-1)T_{a}}, \quad \forall (ij) \in \mathcal{L}, \quad \forall t_{a} \in \mathcal{T}_{a}. 
 \end{align}
 }
+
+- Radiality constraints for maintaining line status during time interval:
+{\allowdisplaybreaks
+\begin{align}
+  \sum_{h=1+(t_{a}-1)T_{a}}^{t_{a}T_{a}}x_{ij,h} = T_{a}x_{ij,1+(t_{a}-1)T_{a}}, \quad \forall l(ij) \in \mathcal{L}, \forall t_{a} \in \mathcal{T}_{a}.\\
+  x_{ij,t+1} = x_{ij,t}, ( \text{if} \quad 1+(t_{a}-1)T_{a} \leq t \leq t_{a}T_{a}-1) , \quad \forall l(ij) \in \mathcal{L}, \forall t_{a} \in \mathcal{T}_{a}.
+\end{align}
+}
+
 
 
 \bibliographystyle{plain} 
