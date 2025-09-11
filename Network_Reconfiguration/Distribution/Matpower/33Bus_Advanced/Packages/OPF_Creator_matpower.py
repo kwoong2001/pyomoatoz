@@ -665,7 +665,7 @@ def OPF_model_creator_with_switch(np,pyo,base_MVA,Slackbus,Bus_info,Line_info,Lo
     #            return model.Line_Status[l, t+1] == model.Line_Status[l, t]
     #        else:
     #            return pyo.Constraint.Skip
-    # model.Line_Status_time_interval_con2 = pyo.Constraint(model.Lines, model.Time, rule=Line_status_time_interval_rule2)
+    # model.Line_Status_time_interval_con2 = pyo.Constraint(model.Lines, model.Times, rule=Line_status_time_interval_rule2)
     
     
     """
