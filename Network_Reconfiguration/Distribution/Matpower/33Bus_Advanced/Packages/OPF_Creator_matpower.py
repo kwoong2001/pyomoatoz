@@ -660,11 +660,12 @@ def OPF_model_creator_with_switch(np,pyo,base_MVA,Slackbus,Bus_info,Line_info,Lo
     
     # Equation (26) - use if Equation (25) not works
     def Line_status_time_interval_rule2(model, l, t):
-       for ta in range(1, Tp+1):
-           if (t >= 1 +(ta-1)*Ta) and (t<ta*Ta):
-               return model.Line_Status[l, t+1] == model.Line_Status[l, t]
-           else:
-               return model.Line_Status[l, t] <= 1
+        if (t <= Ta):
+            return model.Line_Status[l, t] == model.Line_Status[l, 1]
+        elif (t >= Ta+1) and (t <= 2*Ta):
+            return model.Line_Status[l, t] == model.Line_Status[l, Ta+1]
+        else:
+            return pyo.Constraint.Skip
     model.Line_Status_time_interval_con2 = pyo.Constraint(model.Lines, model.Times, rule=Line_status_time_interval_rule2)
     
     
