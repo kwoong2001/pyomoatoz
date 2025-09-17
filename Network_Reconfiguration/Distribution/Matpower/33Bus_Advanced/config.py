@@ -11,7 +11,7 @@ dg_case = 'mid' # 'none', 'mid', 'end'
 
 pv_penetration = 0.8 # 전체 부하 대비 태양광 발전 비율
 
-Ta = 12 # 시간 간격 (시간 단위)
+Ta = 24 # 시간 간격 (시간 단위)
 Tp = T // Ta # 구간 수
 
 base_dir = os.path.dirname(os.path.abspath(__file__))
@@ -29,7 +29,6 @@ def run_script(script):
         sys.exit(1)
 
 if __name__ == "__main__":
-    run_script('Case33_bus_with_switch.py')
-    run_script('result_system_fig.py')
-    run_script('result_v_p_fig.py')
+    run_script('Case33_bus.py')
+    run_script('result_fig.py')
     print("모든 실행 완료")

@@ -35,14 +35,14 @@ mpc = m.loadcase('case33bw')
 
 if dg_case == 'none':
     if switch == 1:
-        simul_case = '33bus_MINLP_Opt_problem_for_min_cost_with_switch_' + dg_case + '_dgs_' + str(Ta) + '_interval_'
+        simul_case = '33bus_with_switch_' + dg_case + '_dgs_' + str(Ta) + '_interval_'
     elif switch == 0:
-        simul_case = '33bus_MINLP_Opt_problem_for_min_cost_without_switch_' + dg_case + '_dgs_'
+        simul_case = '33bus_without_switch_' + dg_case + '_dgs_'
 else:
     if switch == 1:
-        simul_case = '33bus_MINLP_Opt_problem_for_min_cost_with_switch_' + dg_case + '_dgs_' + str(pv_penetration) + '_pv_penetration_' + str(Ta) + '_interval_'
+        simul_case = '33bus_with_switch_' + dg_case + '_dgs_' + str(pv_penetration) + '_pv_penetration_' + str(Ta) + '_interval_'
     elif switch == 0:
-        simul_case = '33bus_MINLP_Opt_problem_for_min_cost_without_switch_' + dg_case + '_dgs_' + str(pv_penetration) + '_pv_penetration_'
+        simul_case = '33bus_without_switch_' + dg_case + '_dgs_' + str(pv_penetration) + '_pv_penetration_'
 
 print(simul_case)
 
@@ -152,13 +152,13 @@ print('OPF Model total load MW:', D_total)
 P_loss_total = 0
 
 for line in Line_info.index:
-    
-    if instance.P_line_loss[line,time].expr() >= 1e-4:
-        ploss = instance.P_line_loss[line,time].expr()
-    else:
-        ploss = 0
-    P_loss_total = P_loss_total + ploss
-    #print(f"{bus}-Bus Generation: {pgen}MW")
+    for time in Time_info['Time']:
+        if instance.P_line_loss[line,time].expr() >= 1e-4:
+            ploss = instance.P_line_loss[line,time].expr()
+        else:
+            ploss = 0
+        P_loss_total = P_loss_total + ploss
+        #print(f"{bus}-Bus Generation: {pgen}MW")
 print(f"Total P loss: {P_loss_total}MW")
 
 """
