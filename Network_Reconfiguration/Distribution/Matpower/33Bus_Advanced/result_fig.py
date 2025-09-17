@@ -112,12 +112,12 @@ result_df = merged_df[["Line_l", "from_bus", "to_bus", "Value"]].copy()
 result_df = result_df.rename(columns={"Line_l": "line_index", "Value": "line_status"})
 
 # (선택) 결과 저장
-try:
-    result_path = os.path.join(output_directory, "result_df.xlsx")
-except NameError:
-    result_path = "result_df.xlsx"
-result_df.to_excel(result_path, index=False)
-print(f"Saved: {result_path}")
+# try:
+#     result_path = os.path.join(output_directory, "result_df.xlsx")
+# except NameError:
+#     result_path = "result_df.xlsx"
+# result_df.to_excel(result_path, index=False)
+# print(f"Saved: {result_path}")
 
 # 4) 활성 간선(branches) 만들기
 active = result_df[result_df["line_status"].astype(int) >= 1].copy()
